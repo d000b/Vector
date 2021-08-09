@@ -16,21 +16,22 @@ template <typename __type__ = int>
 class UltimaAPI::Vector
 {
 public:
+	// Value
 	using value = __type__;
 	using rvalue = value&&;
 	using pointer = value*;
 	using reference = value&;
-
+	// Vector
 	using vector = Vector<value>;
 	using vector_rvalue = vector&&;
 	using vector_pointer = vector*;
 	using vector_reference = vector&;
-
+	// Initializer_list
 	using list = std::initializer_list<value>;
 	using list_rvalue = list&&;
 	using list_pointer = list*;
 	using list_reference = list&;
-	
+	// Iterator
 	using iterator = BasicIterator<value>;
 	using const_iterator = BasicIterator<const value>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
