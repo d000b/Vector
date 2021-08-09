@@ -1,0 +1,25 @@
+ADD MultidimensionalVector
+COMMENT At the current time (02/16/2021) the problem is that the function cannot return 2 types, and there is no desire to build a template based Vector<Vector<Vector<float>>>
+COMMENT The Main problem of this method, in the line above, is the impossibility of dynamic initialization of the shopping mall, the dimension will always remain static
+
+I thought about it and decided that it is necessary to add memory optimization as in std::string, where the memory address cell is used as a container for letters.
+Я тут подумал, что при использовании
+```cpp
+	union
+	{
+		struct
+		{
+			__int8 b;
+			__int8 pad[3];
+		} s;
+		__int32 i;
+		__int64 l;
+	};
+
+	s.b = 128;
+```
+если использовать отдельную переменную для хранения указателя на память, то не будет необходимости использовать кучу условий...
+
+везде пишется в переменную 128, но вот проблема - если переменная __int8 переполнится, 
+то может так совпасть, что биты отвечающие за эту переменную будет такой случай, 
+что при проверке c.use >= max_elements() будет ложно положительный результат...
