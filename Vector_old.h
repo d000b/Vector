@@ -72,20 +72,13 @@ private:
 	{
 		return size_t(idx * mul_alloc + 1);
 	}
-	/// <summary>
-	///	The function checks the necessity for extending the data block
-	/// <returns>bool</returns>
-	/// </summary>
-	__forceinline decltype(auto) used_oversize_vector()
-	{
-		return used >= allocated;
-	}
 	///	<summary>
-	/// TODO
+	/// Increases the block for writing data if necessary
+	/// <returns>void</returns>
 	/// </summary>
-	__inline decltype(auto) check_allocate() noexcept
+	decltype(auto) check_allocate() noexcept
 	{
-		if (used_oversize_vector())
+		if (used >= allocated)
 			allocate(used_step());
 	}
 	/// <summary>
@@ -762,6 +755,22 @@ public:
 		return used <= i;
 	}
 	__inline decltype(auto) operator>=(size_t i) noexcept
+	{
+		return used >= i;
+	}
+	__inline decltype(auto) operator<(size_t i) const noexcept
+	{
+		return used < i;
+	}
+	__inline decltype(auto) operator>(size_t i) const noexcept
+	{
+		return used > i;
+	}
+	__inline decltype(auto) operator<=(size_t i) const noexcept
+	{
+		return used <= i;
+	}
+	__inline decltype(auto) operator>=(size_t i) const noexcept
 	{
 		return used >= i;
 	}
