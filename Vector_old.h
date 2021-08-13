@@ -219,7 +219,7 @@ public:
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
 	/// </summary>
-	decltype(auto) move_insert(size_t place, pointer val, size_t count)
+	decltype(auto) move_insert(size_t place, const pointer val, size_t count)
 	{
 		auto place_address = start + place;
 		if (insert_correct(place, count))
@@ -269,6 +269,48 @@ public:
 		move_insert(used, from);
 	}
 	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="l"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(size_t place, list_reference l)
+	{
+		move_insert(place, l.begin(), l.size());
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="v"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(size_t place, vector_reference v)
+	{
+		move_insert(place, v.data(), v.size());
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="l"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(list_reference from)
+	{
+		move_insert(used, from);
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="v"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(vector_reference from)
+	{
+		move_insert(used, from);
+	}
+	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
 	/// <returns>void</returns>
@@ -288,7 +330,7 @@ public:
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
 	/// </summary>
-	decltype(auto) insert(size_t place, pointer val, size_t count) noexcept
+	decltype(auto) insert(size_t place, const pointer val, size_t count) noexcept
 	{
 		insert_correct(place, count);
 		memcpy(start + place, val, count * size_value());
@@ -332,6 +374,48 @@ public:
 	/// <param name="l"> TODO </param>
 	/// </summary>
 	__inline decltype(auto) insert(vector_rvalue from) noexcept
+	{
+		insert(used, from);
+	}
+	/// <summary>
+	/// Inserting an items into a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="from"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(size_t place, list_reference from) noexcept
+	{
+		insert(place, from.begin(), from.size()); // FIXME
+	}
+	/// <summary>
+	/// Inserting an items into a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="from"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(size_t place, vector_reference from) noexcept
+	{
+		insert(place, from.data(), from.size());
+	}
+	/// <summary>
+	/// Inserting elements at the end of a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="list"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(list_reference from) noexcept
+	{
+		insert(used, from);
+	}
+	/// <summary>
+	/// Inserting elements at the end of a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="l"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(vector_reference from) noexcept
 	{
 		insert(used, from);
 	}
@@ -669,6 +753,17 @@ public:
 		insert(v);
 	}
 	/// <summary>
+	/// Operator for inserting values from the initialization_list.
+	///	The old vector values in the data block will be forgotten (lost).
+	/// <returns>void</returns>
+	/// <param name="v"> TODO </param>
+	/// </summary>
+	decltype(auto) operator()(list_reference v) noexcept
+	{
+		free();
+		insert(v);
+	}
+	/// <summary>
 	/// API calling free()
 	/// <returns>void</returns>
 	/// </summary>
@@ -803,6 +898,22 @@ public:
 		allocated = used = 0;
 		start = nullptr;
 		insert(0, ray, sz);
+	}
+	/// <summary>
+	///	CONSTRUCTOR initializer_list
+	/// <param name="v"> TODO </param>
+	/// </summary>
+	Vector(list_reference v) noexcept
+	{
+		this->operator()(v);
+	}
+	/// <summary>
+	///	CONSTRUCTOR copy
+	/// <param name="v">reference to vector</param>
+	/// </summary>
+	Vector(vector_reference v) noexcept
+	{
+		v.copy(this);
 	}
 	/// <summary>
 	///	CONSTRUCTOR initializer_list
