@@ -776,14 +776,6 @@ public:
 	}
 	
 	/// <summary>
-	///	CONSTRUCTOR initializer_list
-	/// <param name="v"> TODO </param>
-	/// </summary>
-	Vector(list_rvalue v) noexcept
-	{
-		this->operator()(v);
-	}
-	/// <summary>
 	///	CONSTRUCTOR null
 	/// </summary>
 	Vector() noexcept
@@ -811,6 +803,14 @@ public:
 		allocated = used = 0;
 		start = nullptr;
 		insert(0, ray, sz);
+	}
+	/// <summary>
+	///	CONSTRUCTOR initializer_list
+	/// <param name="v"> TODO </param>
+	/// </summary>
+	Vector(list_rvalue v) noexcept
+	{
+		this->operator()(v);
 	}
 	/// <summary>
 	///	CONSTRUCTOR copy
