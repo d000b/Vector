@@ -27,9 +27,9 @@ public:
 	using list_reference = list&;
 	// Vector
 	using vector = Vector<value>;
-	using vector_rvalue = list&&;
-	using vector_pointer = list*;
-	using vector_reference = list&;
+	using vector_rvalue = vector&&;
+	using vector_pointer = vector*;
+	using vector_reference = vector&;
 	// Iterator
 	using iterator = BasicIterator<value>;
 	using const_iterator = BasicIterator<const value>;
@@ -254,9 +254,9 @@ public:
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
 	/// </summary>
-	__inline decltype(auto) move_insert(list_rvalue l)
+	__inline decltype(auto) move_insert(list_rvalue from)
 	{
-		move_insert(used, l);
+		move_insert(used, from);
 	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
@@ -264,9 +264,9 @@ public:
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
 	/// </summary>
-	__inline decltype(auto) move_insert(vector_rvalue v)
+	__inline decltype(auto) move_insert(vector_rvalue from)
 	{
-		move_insert(used, v);
+		move_insert(used, from);
 	}
 	/// <summary>
 	/// Inserting an items into a data block.
@@ -321,7 +321,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="list"> TODO </param>
 	/// </summary>
-	__inline decltype(auto) insert(list l) noexcept
+	__inline decltype(auto) insert(list from) noexcept
 	{
 		insert(used, from);
 	}
@@ -331,7 +331,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
 	/// </summary>
-	__inline decltype(auto) insert(vector_rvalue v) noexcept
+	__inline decltype(auto) insert(vector_rvalue from) noexcept
 	{
 		insert(used, from);
 	}
