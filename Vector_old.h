@@ -321,7 +321,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="list"> TODO </param>
 	/// </summary>
-	__inline decltype(auto) insert(list from) noexcept
+	__inline decltype(auto) insert(list_rvalue from) noexcept
 	{
 		insert(used, from);
 	}
