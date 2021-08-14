@@ -11,6 +11,8 @@ namespace UltimaAPI
 	template <typename type>  class Vector;
 }
 
+#define INCLUDE_INITIALIZER_LIST 0
+
 template <typename __type__ = int>
 class UltimaAPI::Vector
 {
@@ -41,8 +43,10 @@ private:
 	pointer	start;
 public:
 	static constexpr size_t npos = -1;
-	static constexpr double mul_alloc = 1.6487;
 private:
+	static constexpr double mul_alloc = 1.6487;
+
+	static_assert(!INCLUDE_INITIALIZER_LIST, "It is not possible to use std::initializer_list at the current time(version)");
 	static_assert(std::is_pod<value>::value, "In the current version it is not possible to work with non-POD type");
 
 	/// <summary>
@@ -219,23 +223,12 @@ public:
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
 	/// </summary>
-	decltype(auto) move_insert(size_t place, const pointer val, size_t count)
+	decltype(auto) move_insert(size_t place, pointer val, size_t count)
 	{
 		auto place_address = start + place;
 		if (insert_correct(place, count))
 			Memory::memcpy(place_address + count, place_address, used - place);
 		Memory::memcpy(place_address, val, count * size_value());
-	}
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// <returns>void</returns>
-	/// <param name="place">place index element</param>
-	/// <param name="l"> TODO </param>
-	/// </summary>
-	__inline decltype(auto) move_insert(size_t place, list_rvalue l)
-	{
-		move_insert(place, l.begin(), l.size());
 	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
@@ -252,16 +245,6 @@ public:
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
 	/// <returns>void</returns>
-	/// <param name="l"> TODO </param>
-	/// </summary>
-	__inline decltype(auto) move_insert(list_rvalue from)
-	{
-		move_insert(used, from);
-	}
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
 	/// </summary>
 	__inline decltype(auto) move_insert(vector_rvalue from)
@@ -273,32 +256,11 @@ public:
 	/// Inserting an items into a data block and moving other data if a collision occurred.
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
-	/// <param name="l"> TODO </param>
-	/// </summary>
-	__inline decltype(auto) move_insert(size_t place, list_reference l)
-	{
-		move_insert(place, l.begin(), l.size());
-	}
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// <returns>void</returns>
-	/// <param name="place">place index element</param>
 	/// <param name="v"> TODO </param>
 	/// </summary>
 	__inline decltype(auto) move_insert(size_t place, vector_reference v)
 	{
 		move_insert(place, v.data(), v.size());
-	}
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// <returns>void</returns>
-	/// <param name="l"> TODO </param>
-	/// </summary>
-	__inline decltype(auto) move_insert(list_reference from)
-	{
-		move_insert(used, from);
 	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
@@ -330,7 +292,7 @@ public:
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
 	/// </summary>
-	decltype(auto) insert(size_t place, const pointer val, size_t count) noexcept
+	decltype(auto) insert(size_t place, pointer val, size_t count) noexcept
 	{
 		insert_correct(place, count);
 		memcpy(start + place, val, count * size_value());
@@ -342,30 +304,9 @@ public:
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
 	/// </summary>
-	__inline decltype(auto) insert(size_t place, list_rvalue from) noexcept
-	{
-		insert(place, from.begin(), from.size());
-	}
-	/// <summary>
-	/// Inserting an items into a data block.
-	///	Without moving other data(Erases data) if a collision occurred.
-	/// <returns>void</returns>
-	/// <param name="place">place index element</param>
-	/// <param name="from"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(size_t place, vector_rvalue from) noexcept
 	{
 		insert(place, from.data(), from.size());
-	}
-	/// <summary>
-	/// Inserting elements at the end of a data block.
-	///	Without moving other data(Erases data) if a collision occurred.
-	/// <returns>void</returns>
-	/// <param name="list"> TODO </param>
-	/// </summary>
-	__inline decltype(auto) insert(list_rvalue from) noexcept
-	{
-		insert(used, from);
 	}
 	/// <summary>
 	/// Inserting elements at the end of a data block.
@@ -384,30 +325,9 @@ public:
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
 	/// </summary>
-	__inline decltype(auto) insert(size_t place, list_reference from) noexcept
-	{
-		insert(place, from.begin(), from.size()); // FIXME
-	}
-	/// <summary>
-	/// Inserting an items into a data block.
-	///	Without moving other data(Erases data) if a collision occurred.
-	/// <returns>void</returns>
-	/// <param name="place">place index element</param>
-	/// <param name="from"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(size_t place, vector_reference from) noexcept
 	{
 		insert(place, from.data(), from.size());
-	}
-	/// <summary>
-	/// Inserting elements at the end of a data block.
-	///	Without moving other data(Erases data) if a collision occurred.
-	/// <returns>void</returns>
-	/// <param name="list"> TODO </param>
-	/// </summary>
-	__inline decltype(auto) insert(list_reference from) noexcept
-	{
-		insert(used, from);
 	}
 	/// <summary>
 	/// Inserting elements at the end of a data block.
@@ -419,6 +339,94 @@ public:
 	{
 		insert(used, from);
 	}
+
+#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="l"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(size_t place, list_rvalue l)
+	{
+		move_insert(place, l.begin(), l.size());
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="l"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(list_rvalue from)
+	{
+		move_insert(used, from);
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="l"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(size_t place, list_reference l)
+	{
+		move_insert(place, l.begin(), l.size());
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="l"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) move_insert(list_reference from)
+	{
+		move_insert(used, from);
+	}
+	/// <summary>
+	/// Inserting an items into a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="from"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(size_t place, list_rvalue from) noexcept
+	{
+		insert(place, from.begin(), from.size());
+	}
+	/// <summary>
+	/// Inserting elements at the end of a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="list"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(list_rvalue from) noexcept
+	{
+		insert(used, from);
+	}
+	/// <summary>
+	/// Inserting an items into a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="from"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(size_t place, list_reference from) noexcept
+	{
+		insert(place, from.begin(), from.size()); // FIXME
+	}
+	/// <summary>
+	/// Inserting elements at the end of a data block.
+	///	Without moving other data(Erases data) if a collision occurred.
+	/// <returns>void</returns>
+	/// <param name="list"> TODO </param>
+	/// </summary>
+	__inline decltype(auto) insert(list_reference from) noexcept
+	{
+		insert(used, from);
+	}
+#endif
+
 	/// <summary>
 	/// Count items entered into the data block
 	/// <returns>size_t</returns>
@@ -882,10 +890,8 @@ public:
 	///	CONSTRUCTOR reserve
 	/// <param name="sz">Count elements to allocate</param>
 	/// </summary>
-	Vector(size_t sz) noexcept
+	Vector(size_t sz) : Vector() noexcept
 	{
-		allocated = used = 0;
-		start = nullptr;
 		allocate(sz);
 	}
 	/// <summary>
@@ -893,35 +899,37 @@ public:
 	/// <param name="sz">Count elements to allocate</param>
 	/// <param name="ray">pointer to values</param>
 	/// </summary>
-	Vector(size_t sz, pointer ray) noexcept
+	Vector(size_t sz, pointer ray) : Vector() noexcept
 	{
-		allocated = used = 0;
-		start = nullptr;
 		insert(0, ray, sz);
+	}
+
+#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
+	/// <summary>
+	///	CONSTRUCTOR initializer_list
+	/// <param name="v"> TODO </param>
+	/// </summary>
+	Vector(list_reference v) : Vector() noexcept
+	{
+		insert(v);
 	}
 	/// <summary>
 	///	CONSTRUCTOR initializer_list
 	/// <param name="v"> TODO </param>
 	/// </summary>
-	Vector(list_reference v) noexcept
+	Vector(list_rvalue v) : Vector() noexcept
 	{
-		this->operator()(v);
+		insert(v);
 	}
+#endif
+
 	/// <summary>
 	///	CONSTRUCTOR copy
 	/// <param name="v">reference to vector</param>
 	/// </summary>
-	Vector(vector_reference v) noexcept
+	Vector(vector_reference v) : Vector() noexcept
 	{
 		v.copy(this);
-	}
-	/// <summary>
-	///	CONSTRUCTOR initializer_list
-	/// <param name="v"> TODO </param>
-	/// </summary>
-	Vector(list_rvalue v) noexcept
-	{
-		this->operator()(v);
 	}
 	/// <summary>
 	///	CONSTRUCTOR copy
