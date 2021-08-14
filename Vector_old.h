@@ -756,6 +756,7 @@ public:
 		return const_reverse_iterator(cbegin());
 	}
 
+#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
 	/// <summary>
 	/// Operator for inserting values from the initialization_list.
 	///	The old vector values in the data block will be forgotten (lost).
@@ -764,7 +765,6 @@ public:
 	/// </summary>
 	decltype(auto) operator()(list_rvalue v) noexcept
 	{
-		free();
 		insert(v);
 	}
 	/// <summary>
@@ -775,9 +775,10 @@ public:
 	/// </summary>
 	decltype(auto) operator()(list_reference v) noexcept
 	{
-		free();
 		insert(v);
 	}
+#endif
+
 	/// <summary>
 	/// API calling free()
 	/// <returns>void</returns>
@@ -897,7 +898,7 @@ public:
 	///	CONSTRUCTOR reserve
 	/// <param name="sz">Count elements to allocate</param>
 	/// </summary>
-	Vector(size_t sz) : Vector() noexcept
+	Vector(size_t sz) : Vector()
 	{
 		allocate(sz);
 	}
@@ -906,7 +907,7 @@ public:
 	/// <param name="sz">Count elements to allocate</param>
 	/// <param name="ray">pointer to values</param>
 	/// </summary>
-	Vector(size_t sz, pointer ray) : Vector() noexcept
+	Vector(size_t sz, pointer ray) : Vector()
 	{
 		insert(0, ray, sz);
 	}
@@ -934,7 +935,7 @@ public:
 	///	CONSTRUCTOR copy
 	/// <param name="v">reference to vector</param>
 	/// </summary>
-	Vector(vector_reference v) : Vector() noexcept
+	Vector(vector_reference v) : Vector()
 	{
 		v.copy(this);
 	}
