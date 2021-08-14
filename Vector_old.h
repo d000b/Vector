@@ -59,8 +59,8 @@ private:
 	/// <summary>
 	/// allocated version
 	/// The next step in the size of the data block.
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	decltype(auto) alloc_step()
 	{
 		return size_t(allocated * mul_alloc + 1);
@@ -68,8 +68,8 @@ private:
 	/// <summary>
 	/// used version
 	/// The next step in the size of the data block.
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	decltype(auto) used_step()
 	{
 		return size_t(used * mul_alloc + 1);
@@ -77,16 +77,16 @@ private:
 	/// <summary>
 	/// index version
 	/// The next step in the size of the data block.
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	decltype(auto) index_step(size_t idx)
 	{
 		return size_t(idx * mul_alloc + 1);
 	}
 	///	<summary>
 	/// Increases the block for writing data if necessary
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) check_allocate() noexcept
 	{
 		if (used >= allocated)
@@ -96,9 +96,9 @@ private:
 	///	Creates in memory, changes, deletes block of elements - a vector, 
 	///	the function should not be called without a shell. 
 	///	To use this function, it should be called through the reserve(...) function.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="al">count elements to alloc in memory</param>
-	/// </summary>
 	decltype(auto) allocate(size_t al) noexcept
 	{
 		if (al)
@@ -118,9 +118,9 @@ private:
 	}
 	/// <summary>
 	///	The function checks if it is possible to insert elements without having to shift.
+	/// </summary>
 	/// <returns>true, if need moving data</returns>
 	/// <param name="place">place index element</param>
-	/// </summary>
 	decltype(auto) insert_correct(size_t place)
 	{
 		bool ret = true;
@@ -134,10 +134,10 @@ private:
 	}
 	/// <summary>
 	///	The function checks if it is possible to insert elements without having to shift.
+	/// </summary>
 	/// <returns>true, if need moving data</returns>
 	/// <param name="place">place index elements</param>
 	/// <param name="count">count elements</param>
-	/// </summary>
 	decltype(auto) insert_correct(size_t place, size_t count)
 	{
 		bool ret = true;
@@ -152,9 +152,9 @@ private:
 public:
 	/// <summary>
 	/// Expands/controls the size/receives the value of the i element.
+	/// </summary>
 	/// <returns>rvalue</returns>
 	/// <param name="i">Index</param>
-	/// </summary>
 	decltype(auto) at(size_t i)
 	{
 		if (i >= used)
@@ -168,9 +168,9 @@ public:
 	/// <summary>
 	///	BEWARE out-from-range
 	/// receives the value of the i element.
+	/// </summary>
 	/// <returns>reference value</returns>
 	/// <param name="i">Index</param>
-	/// </summary>
 	decltype(auto) at(size_t i) const
 	{
 		return reference(start[i]);
@@ -178,9 +178,9 @@ public:
 	/// <summary>
 	///	Inserting an element at the end of a data block.
 	///	This function itself extends the data block if it is necessary.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="val">element to push</param>
-	/// </summary>
 	decltype(auto) push_back(value val) noexcept
 	{
 		check_allocate();
@@ -190,10 +190,10 @@ public:
 	/// <summary>
 	///	Inserting an elements at the end of a data block.
 	///	This function itself extends the data block if it is necessary.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="c">count elements</param>
-	/// </summary>
 	decltype(auto) push_back(pointer val, size_t c) noexcept
 	{
 		move_insert(used, val, c);
@@ -202,8 +202,8 @@ public:
 	///	Deletes the last element from the data block.
 	///	(As long as the data is not overwritten by new data and/or the block is not moved to a new location, the deleted information will still exist.)
 	///	The size allocate of the block does not change.
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) pop_back() noexcept
 	{
 		if (used > 0)
@@ -212,10 +212,10 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an item into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="val">element to push</param>
-	/// </summary>
 	decltype(auto) move_insert(size_t place, value val)
 	{
 		if (insert_correct(place))
@@ -225,11 +225,11 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
-	/// </summary>
 	decltype(auto) move_insert(size_t place, pointer val, size_t count)
 	{
 		auto place_address = start + place;
@@ -240,10 +240,10 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="v"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(size_t place, vector_rvalue v)
 	{
 		move_insert(place, v.data(), v.size());
@@ -251,9 +251,9 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(vector_rvalue from)
 	{
 		move_insert(used, from);
@@ -261,10 +261,10 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="v"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(size_t place, vector_reference v)
 	{
 		move_insert(place, v.data(), v.size());
@@ -272,9 +272,9 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(vector_reference from)
 	{
 		move_insert(used, from);
@@ -282,10 +282,10 @@ public:
 	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="val">element to push</param>
-	/// </summary>
 	decltype(auto) insert(size_t place, rvalue val) noexcept
 	{
 		insert_correct(place);
@@ -294,11 +294,11 @@ public:
 	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
-	/// </summary>
 	decltype(auto) insert(size_t place, pointer val, size_t count) noexcept
 	{
 		insert_correct(place, count);
@@ -307,10 +307,10 @@ public:
 	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(size_t place, vector_rvalue from) noexcept
 	{
 		insert(place, from.data(), from.size());
@@ -318,9 +318,9 @@ public:
 	/// <summary>
 	/// Inserting elements at the end of a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(vector_rvalue from) noexcept
 	{
 		insert(used, from);
@@ -328,10 +328,10 @@ public:
 	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(size_t place, vector_reference from) noexcept
 	{
 		insert(place, from.data(), from.size());
@@ -339,9 +339,9 @@ public:
 	/// <summary>
 	/// Inserting elements at the end of a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(vector_reference from) noexcept
 	{
 		insert(used, from);
@@ -351,10 +351,10 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="l"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(size_t place, list_rvalue l)
 	{
 		move_insert(place, l.begin(), l.size());
@@ -362,9 +362,9 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(list_rvalue from)
 	{
 		move_insert(used, from);
@@ -372,10 +372,10 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="l"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(size_t place, list_reference l)
 	{
 		move_insert(place, l.begin(), l.size());
@@ -383,9 +383,9 @@ public:
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) move_insert(list_reference from)
 	{
 		move_insert(used, from);
@@ -393,10 +393,10 @@ public:
 	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(size_t place, list_rvalue from) noexcept
 	{
 		insert(place, from.begin(), from.size());
@@ -404,9 +404,9 @@ public:
 	/// <summary>
 	/// Inserting elements at the end of a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="list"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(list_rvalue from) noexcept
 	{
 		insert(used, from);
@@ -414,10 +414,10 @@ public:
 	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(size_t place, list_reference from) noexcept
 	{
 		insert(place, from.begin(), from.size()); // FIXME
@@ -425,9 +425,9 @@ public:
 	/// <summary>
 	/// Inserting elements at the end of a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="list"> TODO </param>
-	/// </summary>
 	__inline decltype(auto) insert(list_reference from) noexcept
 	{
 		insert(used, from);
@@ -436,32 +436,32 @@ public:
 
 	/// <summary>
 	/// Count items entered into the data block
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	decltype(auto) size() noexcept
 	{
 		return used;
 	}
 	/// <summary>
 	/// Count items entered into the data block
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	decltype(auto) size() const noexcept
 	{
 		return used;
 	}
 	/// <summary>
 	/// Maximum number of items that can be placed without the need to reallocate.
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	decltype(auto) capacity() noexcept
 	{
 		return allocated;
 	}
 	/// <summary>
 	/// Maximum number of items that can be placed without the need to reallocate.
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	decltype(auto) capacity() const noexcept
 	{
 		return allocated;
@@ -469,9 +469,9 @@ public:
 	/// <summary>
 	/// Copies the contents of the data block.
 	///	Allocating memory for the contents as in the original vector.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector<value>*</param>
-	/// </summary>
 	decltype(auto) copy(vector_pointer v) noexcept
 	{
 		v->allocate(allocated);
@@ -481,9 +481,9 @@ public:
 	/// <summary>
 	/// Copies the contents of the data block.
 	///	Allocating memory for the contents as in the original vector.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector<value>*</param>
-	/// </summary>
 	decltype(auto) copy(vector_pointer v) const noexcept
 	{
 		v->allocate(allocated);
@@ -492,25 +492,25 @@ public:
 	}
 	/// <summary>
 	/// Clears the contents of the data block without erasing previous data.
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) clear() noexcept
 	{
 		used = 0;
 	}
 	/// <summary>
 	/// Clears the contents of the data block without erasing previous data.
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) clear() const noexcept
 	{
 		used = 0;
 	}
 	/// <summary>
 	/// Sets the standard value (zero) for the i element
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="i">Index to the element</param>
-	/// </summary>
 	decltype(auto) erase(size_t i) noexcept
 	{
 		start[i] = 0; // ?? memcpy(start + i, )
@@ -520,8 +520,8 @@ public:
 	///		-(It is necessary to check the out of range!)
 	///		-(Does not increase the current size of the data block!)
 	///	Used in iterators.
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) last() noexcept
 	{
 		return start + used;
@@ -531,8 +531,8 @@ public:
 	///		-(It is necessary to check the out of range!)
 	///		-(Does not increase the current size of the data block!)
 	///	Used in iterators.
-	/// <returns>value&&</returns>
 	/// </summary>
+	/// <returns>value&&</returns>
 	decltype(auto) last() const noexcept
 	{
 		return start + used;
@@ -541,8 +541,8 @@ public:
 	/// The cell for writing the first element. 
 	///	It is necessary to check the out of range!
 	///	Does not increase the current size of the data block!
-	/// <returns>rvalue</returns>
 	/// </summary>
+	/// <returns>rvalue</returns>
 	decltype(auto) front() noexcept
 	{
 		return rvalue(*start);
@@ -551,8 +551,8 @@ public:
 	/// The cell for writing the first element. 
 	///	It is necessary to check the out of range!
 	///	Does not increase the current size of the data block!
-	/// <returns>rvalue</returns>
 	/// </summary>
+	/// <returns>rvalue</returns>
 	decltype(auto) front() const noexcept
 	{
 		return rvalue(*start);
@@ -561,8 +561,8 @@ public:
 	/// The cell for writing the next element. 
 	///	It is necessary to check the out of range!
 	///	Does not increase the current size of the data block!
-	/// <returns>rvalue</returns>
 	/// </summary>
+	/// <returns>rvalue</returns>
 	decltype(auto) back() noexcept
 	{
 		return rvalue(*(start + used));
@@ -571,34 +571,34 @@ public:
 	/// The cell for writing the next element. 
 	///	It is necessary to check the out of range!
 	///	Does not increase the current size of the data block!
-	/// <returns>rvalue</returns>
 	/// </summary>
+	/// <returns>rvalue</returns>
 	decltype(auto) back() const noexcept
 	{
 		return rvalue(*(start + used));
 	}
 	/// <summary>
 	///	Data block
-	/// <returns>pointer to the data block</returns>
 	/// </summary>
+	/// <returns>pointer to the data block</returns>
 	decltype(auto) data() noexcept
 	{
 		return start;
 	}
 	/// <summary>
 	///	Data block
-	/// <returns>pointer to the data block</returns>
 	/// </summary>
+	/// <returns>pointer to the data block</returns>
 	decltype(auto) data() const noexcept
 	{
 		return start;
 	}
 	/// <summary>
 	///	Swaps the contents of the i and j elements
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="i">Index to the element</param>
 	/// <param name="j">Index to the element</param>
-	/// </summary>
 	decltype(auto) swap(size_t i, size_t j)
 	{
 		if (i == j)
@@ -608,34 +608,34 @@ public:
 	}
 	/// <summary>
 	///	Swaps the contents Vectors
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector<value> rvalue</param>
-	/// </summary>
 	decltype(auto) swap(vector_rvalue v) noexcept
 	{
 		std::swap(*this, v);
 	}
 	/// <summary>
 	///	Swaps the contents const Vectors
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector<value> rvalue</param>
-	/// </summary>
 	decltype(auto) swap(const vector_rvalue v) const noexcept
 	{
 		std::swap(*this, v);
 	}
 	/// <summary>
 	///	Test to empty.
-	/// <returns>bool</returns>
 	/// </summary>
+	/// <returns>bool</returns>
 	decltype(auto) empty() noexcept
 	{
 		return used == 0;
 	}
 	/// <summary>
 	///	Test to empty.
-	/// <returns>bool</returns>
 	/// </summary>
+	/// <returns>bool</returns>
 	decltype(auto) empty() const noexcept
 	{
 		return used == 0;
@@ -643,9 +643,9 @@ public:
 	/// <summary>
 	///	Resize data block. 
 	///	It doesn't erase data when you resize, but it can happen if you reduce the size and it gets copied to a new location. 
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="sz">New data block's size</param>
-	/// </summary>
 	decltype(auto) resize(size_t sz) noexcept
 	{
 		if ((used = sz) > allocated)
@@ -654,8 +654,8 @@ public:
 	/// <summary>
 	///	Frees up the data block.
 	///	Makes the vector invalid.
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) free() noexcept
 	{
 		allocated = used = 0;
@@ -666,8 +666,8 @@ public:
 	/// <summary>
 	///	Frees up the data block.
 	///	Makes the vector invalid.
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) free() const noexcept
 	{
 		allocated = used = 0;
@@ -676,10 +676,10 @@ public:
 		start = nullptr;
 	}
 	/// <summary>
-	///	API for calling allocate(...)
+	/// TODO
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="sz">New size</param>
-	/// </summary>
 	decltype(auto) reserve(size_t sz) noexcept
 	{
 		allocate(sz);
@@ -687,32 +687,32 @@ public:
 	/// <summary>
 	///	The maximum possible number of vector elements.
 	///	Regardless of available memory.
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	constexpr decltype(auto) max_size() noexcept
 	{
 		return npos / size_value(); // npos has nothing to do with this expression, the only thing needed from it is size_t(-1)
 	}
 	/// <summary>
 	///	The size of one vector element
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	constexpr decltype(auto) size_value() noexcept
 	{
 		return sizeof(value);
 	}
 	/// <summary>
 	///	The size of vector
-	/// <returns>size_t</returns>
 	/// </summary>
+	/// <returns>size_t</returns>
 	constexpr decltype(auto) size_vector() noexcept
 	{
 		return sizeof(vector);
 	}
 	/// <summary>
 	///	Shrink vector to fit size
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) shrink_to_fit() noexcept
 	{
 		if (used < allocated)
@@ -760,9 +760,9 @@ public:
 	/// <summary>
 	/// Operator for inserting values from the initialization_list.
 	///	The old vector values in the data block will be forgotten (lost).
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	/// </summary>
 	decltype(auto) operator()(list_rvalue v) noexcept
 	{
 		insert(v);
@@ -770,9 +770,9 @@ public:
 	/// <summary>
 	/// Operator for inserting values from the initialization_list.
 	///	The old vector values in the data block will be forgotten (lost).
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	/// </summary>
 	decltype(auto) operator()(list_reference v) noexcept
 	{
 		insert(v);
@@ -781,35 +781,35 @@ public:
 
 	/// <summary>
 	/// API calling free()
-	/// <returns>void</returns>
 	/// </summary>
+	/// <returns>void</returns>
 	decltype(auto) operator~() noexcept
 	{
 		free();
 	}
 	/// <summary>
 	/// API calling swap()
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector to swap</param>
-	/// </summary>
 	decltype(auto) operator^=(vector_rvalue v) noexcept
 	{
 		swap(v);
 	}
 	/// <summary>
 	/// insert value
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push value</param>
-	/// </summary>
 	decltype(auto) operator+=(value c) noexcept
 	{
 		push_back(c);
 	}
 	/// <summary>
 	/// insert values from other vector.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push values from vector</param>
-	/// </summary>
 	decltype(auto) operator+=(vector_rvalue v) noexcept
 	{
 		insert(v);
@@ -817,9 +817,9 @@ public:
 	/// <summary>
 	/// insert values from other vector pointer.
 	/// Not needing to check null-pointer
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push values from pointer vector</param>
-	/// </summary>
 	decltype(auto) operator+=(vector_pointer v) noexcept
 	{
 		if (v)
@@ -827,9 +827,9 @@ public:
 	}
 	/// <summary>
 	/// insert values from other vector.
+	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push values from vector</param>
-	/// </summary>
 	decltype(auto) operator+=(const vector_rvalue v) const noexcept
 	{
 		insert(v);
@@ -896,17 +896,17 @@ public:
 	}
 	/// <summary>
 	///	CONSTRUCTOR reserve
-	/// <param name="sz">Count elements to allocate</param>
 	/// </summary>
+	/// <param name="sz">Count elements to allocate</param>
 	Vector(size_t sz) : Vector()
 	{
 		allocate(sz);
 	}
 	/// <summary>
 	///	CONSTRUCTOR insert from array
+	/// </summary>
 	/// <param name="sz">Count elements to allocate</param>
 	/// <param name="ray">pointer to values</param>
-	/// </summary>
 	Vector(size_t sz, pointer ray) : Vector()
 	{
 		insert(0, ray, sz);
@@ -915,16 +915,16 @@ public:
 #if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
 	/// <summary>
 	///	CONSTRUCTOR initializer_list
-	/// <param name="v"> TODO </param>
 	/// </summary>
+	/// <param name="v"> TODO </param>
 	Vector(list_reference v) : Vector() noexcept
 	{
 		insert(v);
 	}
 	/// <summary>
 	///	CONSTRUCTOR initializer_list
-	/// <param name="v"> TODO </param>
 	/// </summary>
+	/// <param name="v"> TODO </param>
 	Vector(list_rvalue v) : Vector() noexcept
 	{
 		insert(v);
@@ -933,16 +933,16 @@ public:
 
 	/// <summary>
 	///	CONSTRUCTOR copy
-	/// <param name="v">reference to vector</param>
 	/// </summary>
+	/// <param name="v">reference to vector</param>
 	Vector(vector_reference v) : Vector()
 	{
 		v.copy(this);
 	}
 	/// <summary>
 	///	CONSTRUCTOR copy
-	/// <param name="v">reference to vector</param>
 	/// </summary>
+	/// <param name="v">reference to vector</param>
 	Vector(vector_rvalue v) noexcept
 	{
 		v.copy(this);
