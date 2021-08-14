@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory.h>
-#include <initializer_list>
 
 #include "../BasicIterator/BasicIterator.h"
 #include "../Memory/util.h"
@@ -13,6 +12,10 @@ namespace UltimaAPI
 
 #define INCLUDE_INITIALIZER_LIST 0
 
+#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
+#include <initializer_list>
+#endif
+
 template <typename __type__ = int>
 class UltimaAPI::Vector
 {
@@ -22,11 +25,15 @@ public:
 	using rvalue = value&&;
 	using pointer = value*;
 	using reference = value&;
+
+#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
 	// Initializer_list
 	using list = std::initializer_list<value>;
 	using list_rvalue = list&&;
 	using list_pointer = list*;
 	using list_reference = list&;
+#endif
+
 	// Vector
 	using vector = Vector<value>;
 	using vector_rvalue = vector&&;
