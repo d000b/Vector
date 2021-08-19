@@ -153,7 +153,7 @@ public:
 	/// <summary>
 	/// Expands/controls the size/receives the value of the i element.
 	/// </summary>
-	/// <returns>rvalue</returns>
+	/// <returns>reference</returns>
 	/// <param name="i">Index</param>
 	decltype(auto) at(size_t i)
 	{
@@ -163,7 +163,7 @@ public:
 			if (i >= allocated)
 				allocate(index_step(i));
 		}
-		return rvalue(start[i]);
+		return reference(start[i]);
 	}
 	/// <summary>
 	///	BEWARE out-from-range
@@ -173,7 +173,7 @@ public:
 	/// <param name="i">Index</param>
 	decltype(auto) at(size_t i) const
 	{
-		return reference(start[i]);
+		return const reference(start[i]);
 	}
 	/// <summary>
 	///	Inserting an element at the end of a data block.
@@ -181,7 +181,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="val">element to push</param>
-	decltype(auto) push_back(value val) noexcept
+	decltype(auto) push_back(rvalue val) noexcept
 	{
 		check_allocate();
 		start[used] = val;
@@ -216,7 +216,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="val">element to push</param>
-	decltype(auto) move_insert(size_t place, value val)
+	decltype(auto) move_insert(size_t place, rvalue val)
 	{
 		if (insert_correct(place))
 			Memory::memcpy(start + place + 1, start + place, used - place);
@@ -838,7 +838,7 @@ public:
 	/// API calling at(...)
 	/// </summary>
 	/// <param name="i">Index</param>
-	/// <returns>rvalue</returns>
+	/// <returns>reference</returns>
 	decltype(auto) operator[](size_t i) noexcept
 	{
 		return at(i);
@@ -847,7 +847,7 @@ public:
 	/// API calling at(...)
 	/// </summary>
 	/// <param name="i">Index</param>
-	/// <returns>reference value</returns>
+	/// <returns>const reference value</returns>
 	decltype(auto) operator[](size_t i) const noexcept
 	{
 		return at(i);
@@ -909,7 +909,7 @@ public:
 	/// <param name="ray">pointer to values</param>
 	Vector(size_t sz, pointer ray) : Vector()
 	{
-		insert(0, ray, sz);
+		insert(used, ray, sz);
 	}
 
 #if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
@@ -917,7 +917,7 @@ public:
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	Vector(list_reference v) : Vector() noexcept
+	Vector(list_reference v) : Vector()
 	{
 		insert(v);
 	}
@@ -925,7 +925,7 @@ public:
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	Vector(list_rvalue v) : Vector() noexcept
+	Vector(list_rvalue v) : Vector()
 	{
 		insert(v);
 	}
