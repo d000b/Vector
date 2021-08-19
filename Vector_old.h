@@ -57,6 +57,14 @@ private:
 	static_assert(std::is_pod<value>::value, "In the current version it is not possible to work with non-POD type");
 
 	/// <summary>
+	///  TODO 
+	/// https://en.cppreference.com/w/cpp/named_req/MoveAssignable
+	/// https://en.cppreference.com/w/cpp/named_req/MoveInsertable
+	/// https://en.cppreference.com/w/cpp/named_req/EmplaceConstructible
+	/// </summary>
+
+
+	/// <summary>
 	/// allocated version
 	/// The next step in the size of the data block.
 	/// </summary>
@@ -209,6 +217,30 @@ public:
 		if (used > 0)
 			--used;
 	}
+#if (0)
+	/// <summary>
+	/// 
+	/// </summary>
+	template <class... Args>
+	decltype(auto) emplace(size_t pos, Args&&... args)
+	{
+		if (pos >= used)
+		{
+			used = pos + 1;
+			if (pos >= allocated)
+				allocate(index_step(pos));
+		}
+		reinterpret_cast<reference>(start[pos])(args);
+	}
+	/// <summary>
+	/// 
+	/// </summary>
+	template <class... Args>
+	decltype(auto) emplace_back(Args&&... args)
+	{
+		emplace(used, args);
+	}
+#endif
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an item into a data block and moving other data if a collision occurred.
