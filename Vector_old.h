@@ -1,6 +1,19 @@
 #pragma once
 
+#if __cplusplus == 202002L
+//	C++20
+#elif __cplusplus == 201703L
+//	C++17
+#elif __cplusplus == 201402L
+//	C++14
+#elif __cplusplus == 201103L
+//	C++11
+#elif __cplusplus == 199711L
+// unknow
+#endif
+
 #include <memory.h>
+#include <initializer_list>
 
 #include "../BasicIterator/BasicIterator.h"
 #include "../Memory/util.h"
@@ -10,11 +23,6 @@ namespace UltimaAPI
 	template <typename type>  class Vector;
 }
 
-#define INCLUDE_INITIALIZER_LIST 0
-
-#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
-#include <initializer_list>
-#endif
 
 template <typename __type__ = int>
 class UltimaAPI::Vector
@@ -25,15 +33,12 @@ public:
 	using rvalue = value&&;
 	using pointer = value*;
 	using reference = value&;
-
-#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
+	using const_reference = const reference;
 	// Initializer_list
 	using list = std::initializer_list<value>;
 	using list_rvalue = list&&;
 	using list_pointer = list*;
 	using list_reference = list&;
-#endif
-
 	// Vector
 	using vector = Vector<value>;
 	using vector_rvalue = vector&&;
@@ -53,7 +58,6 @@ public:
 private:
 	static constexpr double mul_alloc = 1.6487;
 
-	static_assert(!INCLUDE_INITIALIZER_LIST, "It is not possible to use std::initializer_list at the current time(version)");
 	static_assert(std::is_pod<value>::value, "In the current version it is not possible to work with non-POD type");
 
 	/// <summary>
@@ -69,7 +73,7 @@ private:
 	/// The next step in the size of the data block.
 	/// </summary>
 	/// <returns>size_t</returns>
-	decltype(auto) alloc_step()
+	constexpr decltype(auto) alloc_step()
 	{
 		return size_t(allocated * mul_alloc + 1);
 	}
@@ -78,7 +82,7 @@ private:
 	/// The next step in the size of the data block.
 	/// </summary>
 	/// <returns>size_t</returns>
-	decltype(auto) used_step()
+	constexpr decltype(auto) used_step()
 	{
 		return size_t(used * mul_alloc + 1);
 	}
@@ -87,7 +91,7 @@ private:
 	/// The next step in the size of the data block.
 	/// </summary>
 	/// <returns>size_t</returns>
-	decltype(auto) index_step(size_t idx)
+	constexpr decltype(auto) index_step(size_t idx)
 	{
 		return size_t(idx * mul_alloc + 1);
 	}
@@ -95,7 +99,7 @@ private:
 	/// Increases the block for writing data if necessary
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) check_allocate() noexcept
+	constexpr decltype(auto) check_allocate() noexcept
 	{
 		if (used >= allocated)
 			allocate(used_step());
@@ -107,7 +111,7 @@ private:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="al">count elements to alloc in memory</param>
-	decltype(auto) allocate(size_t al) noexcept
+	constexpr decltype(auto) allocate(size_t al) noexcept
 	{
 		if (al)
 		{
@@ -129,7 +133,7 @@ private:
 	/// </summary>
 	/// <returns>true, if need moving data</returns>
 	/// <param name="place">place index element</param>
-	decltype(auto) insert_correct(size_t place)
+	constexpr decltype(auto) insert_correct(size_t place)
 	{
 		bool ret = true;
 		if (place > used)
@@ -146,7 +150,7 @@ private:
 	/// <returns>true, if need moving data</returns>
 	/// <param name="place">place index elements</param>
 	/// <param name="count">count elements</param>
-	decltype(auto) insert_correct(size_t place, size_t count)
+	constexpr decltype(auto) insert_correct(size_t place, size_t count)
 	{
 		bool ret = true;
 		if (place >= used)
@@ -163,7 +167,7 @@ public:
 	/// </summary>
 	/// <returns>reference</returns>
 	/// <param name="i">Index</param>
-	decltype(auto) at(size_t i)
+	constexpr decltype(auto) at(size_t i)
 	{
 		if (i >= used)
 		{
@@ -179,9 +183,9 @@ public:
 	/// </summary>
 	/// <returns>reference value</returns>
 	/// <param name="i">Index</param>
-	decltype(auto) at(size_t i) const
+	constexpr decltype(auto) at(size_t i) const
 	{
-		return const reference(start[i]);
+		return const_reference(start[i]);
 	}
 	/// <summary>
 	///	Inserting an element at the end of a data block.
@@ -189,7 +193,19 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="val">element to push</param>
-	decltype(auto) push_back(rvalue val) noexcept
+	constexpr decltype(auto) push_back(rvalue val) noexcept
+	{
+		check_allocate();
+		start[used] = val;
+		++used;
+	}
+	/// <summary>
+	///	Inserting an element at the end of a data block.
+	///	This function itself extends the data block if it is necessary.
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="val">element to push</param>
+	constexpr decltype(auto) push_back(const_reference val) noexcept
 	{
 		check_allocate();
 		start[used] = val;
@@ -202,9 +218,9 @@ public:
 	/// <returns>void</returns>
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="c">count elements</param>
-	decltype(auto) push_back(pointer val, size_t c) noexcept
+	constexpr decltype(auto) push_back(pointer val, size_t c) noexcept
 	{
-		move_insert(used, val, c);
+		insert(used, val, c);
 	}
 	/// <summary>
 	///	Deletes the last element from the data block.
@@ -212,7 +228,7 @@ public:
 	///	The size allocate of the block does not change.
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) pop_back() noexcept
+	constexpr decltype(auto) pop_back() noexcept
 	{
 		if (used > 0)
 			--used;
@@ -222,7 +238,7 @@ public:
 	/// 
 	/// </summary>
 	template <class... Args>
-	decltype(auto) emplace(size_t pos, Args&&... args)
+	constexpr decltype(auto) emplace(size_t pos, Args&&... args)
 	{
 		if (pos >= used)
 		{
@@ -236,7 +252,7 @@ public:
 	/// 
 	/// </summary>
 	template <class... Args>
-	decltype(auto) emplace_back(Args&&... args)
+	constexpr decltype(auto) emplace_back(Args&&... args)
 	{
 		emplace(used, args);
 	}
@@ -248,7 +264,20 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="val">element to push</param>
-	decltype(auto) move_insert(size_t place, rvalue val)
+	constexpr decltype(auto) move_insert(size_t place, rvalue val)
+	{
+		if (insert_correct(place))
+			Memory::memcpy(start + place + 1, start + place, used - place);
+		start[place] = val;
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an item into a data block and moving other data if a collision occurred.
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="val">element to push</param>
+	constexpr decltype(auto) move_insert(size_t place, const_reference val)
 	{
 		if (insert_correct(place))
 			Memory::memcpy(start + place + 1, start + place, used - place);
@@ -262,7 +291,7 @@ public:
 	/// <param name="place">place index element</param>
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
-	decltype(auto) move_insert(size_t place, pointer val, size_t count)
+	constexpr decltype(auto) move_insert(size_t place, pointer val, size_t count)
 	{
 		auto place_address = start + place;
 		if (insert_correct(place, count))
@@ -276,7 +305,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="v"> TODO </param>
-	__inline decltype(auto) move_insert(size_t place, vector_rvalue v)
+	constexpr __inline decltype(auto) move_insert(size_t place, vector_rvalue v)
 	{
 		move_insert(place, v.data(), v.size());
 	}
@@ -286,7 +315,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	__inline decltype(auto) move_insert(vector_rvalue from)
+	constexpr __inline decltype(auto) move_insert(vector_rvalue from)
 	{
 		move_insert(used, from);
 	}
@@ -297,7 +326,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="v"> TODO </param>
-	__inline decltype(auto) move_insert(size_t place, vector_reference v)
+	constexpr __inline decltype(auto) move_insert(size_t place, vector_reference v)
 	{
 		move_insert(place, v.data(), v.size());
 	}
@@ -307,7 +336,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	__inline decltype(auto) move_insert(vector_reference from)
+	constexpr __inline decltype(auto) move_insert(vector_reference from)
 	{
 		move_insert(used, from);
 	}
@@ -318,7 +347,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="val">element to push</param>
-	decltype(auto) insert(size_t place, rvalue val) noexcept
+	constexpr decltype(auto) insert(size_t place, rvalue val) noexcept
 	{
 		insert_correct(place);
 		start[place] = val;
@@ -331,7 +360,7 @@ public:
 	/// <param name="place">place index element</param>
 	/// <param name="val">pointer elements to push</param>
 	/// <param name="count">counts elements</param>
-	decltype(auto) insert(size_t place, pointer val, size_t count) noexcept
+	constexpr decltype(auto) insert(size_t place, pointer val, size_t count) noexcept
 	{
 		insert_correct(place, count);
 		memcpy(start + place, val, count * size_value());
@@ -343,7 +372,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	__inline decltype(auto) insert(size_t place, vector_rvalue from) noexcept
+	constexpr __inline decltype(auto) insert(size_t place, vector_rvalue from) noexcept
 	{
 		insert(place, from.data(), from.size());
 	}
@@ -353,7 +382,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	__inline decltype(auto) insert(vector_rvalue from) noexcept
+	constexpr __inline decltype(auto) insert(vector_rvalue from) noexcept
 	{
 		insert(used, from);
 	}
@@ -364,7 +393,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	__inline decltype(auto) insert(size_t place, vector_reference from) noexcept
+	constexpr __inline decltype(auto) insert(size_t place, vector_reference from) noexcept
 	{
 		insert(place, from.data(), from.size());
 	}
@@ -374,7 +403,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	__inline decltype(auto) insert(vector_reference from) noexcept
+	constexpr __inline decltype(auto) insert(vector_reference from) noexcept
 	{
 		insert(used, from);
 	}
@@ -387,9 +416,9 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="l"> TODO </param>
-	__inline decltype(auto) move_insert(size_t place, list_rvalue l)
+	constexpr __inline decltype(auto) move_insert(size_t place, list_rvalue l)
 	{
-		move_insert(place, l.begin(), l.size());
+		move_insert(place, const_cast<pointer>(l.begin()), l.size());
 	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
@@ -397,7 +426,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	__inline decltype(auto) move_insert(list_rvalue from)
+	constexpr __inline decltype(auto) move_insert(list_rvalue from)
 	{
 		move_insert(used, from);
 	}
@@ -408,9 +437,9 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="l"> TODO </param>
-	__inline decltype(auto) move_insert(size_t place, list_reference l)
+	constexpr __inline decltype(auto) move_insert(size_t place, list_reference l)
 	{
-		move_insert(place, l.begin(), l.size());
+		move_insert(place, const_cast<pointer>(l.begin()), l.size());
 	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
@@ -418,7 +447,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	__inline decltype(auto) move_insert(list_reference from)
+	constexpr __inline decltype(auto) move_insert(list_reference from)
 	{
 		move_insert(used, from);
 	}
@@ -429,7 +458,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	__inline decltype(auto) insert(size_t place, list_rvalue from) noexcept
+	constexpr __inline decltype(auto) insert(size_t place, list_rvalue from) noexcept
 	{
 		insert(place, from.begin(), from.size());
 	}
@@ -439,7 +468,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="list"> TODO </param>
-	__inline decltype(auto) insert(list_rvalue from) noexcept
+	constexpr __inline decltype(auto) insert(list_rvalue from) noexcept
 	{
 		insert(used, from);
 	}
@@ -450,9 +479,9 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	__inline decltype(auto) insert(size_t place, list_reference from) noexcept
+	constexpr __inline decltype(auto) insert(size_t place, list_reference from) noexcept
 	{
-		insert(place, from.begin(), from.size()); // FIXME
+		insert(place, const_cast<pointer>(from.begin()), from.size()); // FIXME
 	}
 	/// <summary>
 	/// Inserting elements at the end of a data block.
@@ -460,7 +489,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="list"> TODO </param>
-	__inline decltype(auto) insert(list_reference from) noexcept
+	constexpr __inline decltype(auto) insert(list_reference from) noexcept
 	{
 		insert(used, from);
 	}
@@ -470,7 +499,7 @@ public:
 	/// Count items entered into the data block
 	/// </summary>
 	/// <returns>size_t</returns>
-	decltype(auto) size() noexcept
+	constexpr decltype(auto) size() noexcept
 	{
 		return used;
 	}
@@ -478,7 +507,7 @@ public:
 	/// Count items entered into the data block
 	/// </summary>
 	/// <returns>size_t</returns>
-	decltype(auto) size() const noexcept
+	constexpr decltype(auto) size() const noexcept
 	{
 		return used;
 	}
@@ -486,7 +515,7 @@ public:
 	/// Maximum number of items that can be placed without the need to reallocate.
 	/// </summary>
 	/// <returns>size_t</returns>
-	decltype(auto) capacity() noexcept
+	constexpr decltype(auto) capacity() noexcept
 	{
 		return allocated;
 	}
@@ -494,7 +523,7 @@ public:
 	/// Maximum number of items that can be placed without the need to reallocate.
 	/// </summary>
 	/// <returns>size_t</returns>
-	decltype(auto) capacity() const noexcept
+	constexpr decltype(auto) capacity() const noexcept
 	{
 		return allocated;
 	}
@@ -504,7 +533,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector<value>*</param>
-	decltype(auto) copy(vector_pointer v) noexcept
+	constexpr decltype(auto) copy(vector_pointer v) noexcept
 	{
 		v->allocate(allocated);
 		if (used)
@@ -516,7 +545,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector<value>*</param>
-	decltype(auto) copy(vector_pointer v) const noexcept
+	constexpr decltype(auto) copy(vector_pointer v) const noexcept
 	{
 		v->allocate(allocated);
 		if (used)
@@ -526,7 +555,7 @@ public:
 	/// Clears the contents of the data block without erasing previous data.
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) clear() noexcept
+	constexpr decltype(auto) clear() noexcept
 	{
 		used = 0;
 	}
@@ -534,7 +563,7 @@ public:
 	/// Clears the contents of the data block without erasing previous data.
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) clear() const noexcept
+	constexpr decltype(auto) clear() const noexcept
 	{
 		used = 0;
 	}
@@ -543,7 +572,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="i">Index to the element</param>
-	decltype(auto) erase(size_t i) noexcept
+	constexpr decltype(auto) erase(size_t i) noexcept
 	{
 		start[i] = 0; // ?? memcpy(start + i, )
 	}
@@ -554,7 +583,7 @@ public:
 	///	Used in iterators.
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) last() noexcept
+	constexpr decltype(auto) last() noexcept
 	{
 		return start + used;
 	}
@@ -565,7 +594,7 @@ public:
 	///	Used in iterators.
 	/// </summary>
 	/// <returns>value&&</returns>
-	decltype(auto) last() const noexcept
+	constexpr decltype(auto) last() const noexcept
 	{
 		return start + used;
 	}
@@ -575,7 +604,7 @@ public:
 	///	Does not increase the current size of the data block!
 	/// </summary>
 	/// <returns>rvalue</returns>
-	decltype(auto) front() noexcept
+	constexpr decltype(auto) front() noexcept
 	{
 		return rvalue(*start);
 	}
@@ -585,7 +614,7 @@ public:
 	///	Does not increase the current size of the data block!
 	/// </summary>
 	/// <returns>rvalue</returns>
-	decltype(auto) front() const noexcept
+	constexpr decltype(auto) front() const noexcept
 	{
 		return rvalue(*start);
 	}
@@ -595,7 +624,7 @@ public:
 	///	Does not increase the current size of the data block!
 	/// </summary>
 	/// <returns>rvalue</returns>
-	decltype(auto) back() noexcept
+	constexpr decltype(auto) back() noexcept
 	{
 		return rvalue(*(start + used));
 	}
@@ -605,7 +634,7 @@ public:
 	///	Does not increase the current size of the data block!
 	/// </summary>
 	/// <returns>rvalue</returns>
-	decltype(auto) back() const noexcept
+	constexpr decltype(auto) back() const noexcept
 	{
 		return rvalue(*(start + used));
 	}
@@ -613,7 +642,7 @@ public:
 	///	Data block
 	/// </summary>
 	/// <returns>pointer to the data block</returns>
-	decltype(auto) data() noexcept
+	constexpr decltype(auto) data() noexcept
 	{
 		return start;
 	}
@@ -621,7 +650,7 @@ public:
 	///	Data block
 	/// </summary>
 	/// <returns>pointer to the data block</returns>
-	decltype(auto) data() const noexcept
+	constexpr decltype(auto) data() const noexcept
 	{
 		return start;
 	}
@@ -631,7 +660,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="i">Index to the element</param>
 	/// <param name="j">Index to the element</param>
-	decltype(auto) swap(size_t i, size_t j)
+	constexpr decltype(auto) swap(size_t i, size_t j)
 	{
 		if (i == j)
 			return;
@@ -643,7 +672,16 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector<value> rvalue</param>
-	decltype(auto) swap(vector_rvalue v) noexcept
+	constexpr decltype(auto) swap(vector_rvalue v) noexcept
+	{
+		std::swap(*this, v);
+	}
+	/// <summary>
+	///	Swaps the contents Vectors
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="v">Vector<value>&</param>
+	constexpr decltype(auto) swap(vector_reference v) noexcept
 	{
 		std::swap(*this, v);
 	}
@@ -651,8 +689,17 @@ public:
 	///	Swaps the contents const Vectors
 	/// </summary>
 	/// <returns>void</returns>
-	/// <param name="v">Vector<value> rvalue</param>
-	decltype(auto) swap(const vector_rvalue v) const noexcept
+	/// <param name="v">Vector<value>&&</param>
+	constexpr decltype(auto) swap(const vector_rvalue v) const noexcept
+	{
+		std::swap(*this, v);
+	}
+	/// <summary>
+	///	Swaps the contents const Vectors
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="v">Vector<value>&</param>
+	constexpr decltype(auto) swap(const vector_reference v) const noexcept
 	{
 		std::swap(*this, v);
 	}
@@ -660,7 +707,7 @@ public:
 	///	Test to empty.
 	/// </summary>
 	/// <returns>bool</returns>
-	decltype(auto) empty() noexcept
+	constexpr decltype(auto) empty() noexcept
 	{
 		return used == 0;
 	}
@@ -668,7 +715,7 @@ public:
 	///	Test to empty.
 	/// </summary>
 	/// <returns>bool</returns>
-	decltype(auto) empty() const noexcept
+	constexpr decltype(auto) empty() const noexcept
 	{
 		return used == 0;
 	}
@@ -678,7 +725,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="sz">New data block's size</param>
-	decltype(auto) resize(size_t sz) noexcept
+	constexpr decltype(auto) resize(size_t sz) noexcept
 	{
 		if ((used = sz) > allocated)
 			allocate(used);
@@ -688,7 +735,7 @@ public:
 	///	Makes the vector invalid.
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) free() noexcept
+	constexpr decltype(auto) free() noexcept
 	{
 		allocated = used = 0;
 		if (start)
@@ -700,7 +747,7 @@ public:
 	///	Makes the vector invalid.
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) free() const noexcept
+	constexpr decltype(auto) free() const noexcept
 	{
 		allocated = used = 0;
 		if (start)
@@ -712,7 +759,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="sz">New size</param>
-	decltype(auto) reserve(size_t sz) noexcept
+	constexpr decltype(auto) reserve(size_t sz) noexcept
 	{
 		allocate(sz);
 	}
@@ -745,7 +792,7 @@ public:
 	///	Shrink vector to fit size
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) shrink_to_fit() noexcept
+	constexpr decltype(auto) shrink_to_fit() noexcept
 	{
 		if (used < allocated)
 			allocate(used);
@@ -755,35 +802,35 @@ public:
 	/// Iterators
 	/// </summary>
 
-	decltype(auto) begin() noexcept
+	constexpr decltype(auto) begin() noexcept
 	{
 		return iterator(start);
 	}
-	decltype(auto) end() noexcept
+	constexpr decltype(auto) end() noexcept
 	{
 		return iterator(last());
 	}
-	decltype(auto) cbegin() const noexcept
+	constexpr decltype(auto) cbegin() const noexcept
 	{
 		return const_iterator(start);
 	}
-	decltype(auto) cend() const noexcept
+	constexpr decltype(auto) cend() const noexcept
 	{
 		return const_iterator(last());
 	}
-	decltype(auto) rbegin() noexcept
+	constexpr decltype(auto) rbegin() noexcept
 	{
 		return reverse_iterator(end());
 	}
-	decltype(auto) rend() noexcept
+	constexpr decltype(auto) rend() noexcept
 	{
 		return reverse_iterator(begin());
 	}
-	decltype(auto) crbegin() const noexcept
+	constexpr decltype(auto) crbegin() const noexcept
 	{
 		return const_reverse_iterator(cend());
 	}
-	decltype(auto) crend() const noexcept
+	constexpr decltype(auto) crend() const noexcept
 	{
 		return const_reverse_iterator(cbegin());
 	}
@@ -795,7 +842,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	decltype(auto) operator()(list_rvalue v) noexcept
+	constexpr decltype(auto) operator()(list_rvalue v) noexcept
 	{
 		insert(v);
 	}
@@ -805,7 +852,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	decltype(auto) operator()(list_reference v) noexcept
+	constexpr decltype(auto) operator()(list_reference v) noexcept
 	{
 		insert(v);
 	}
@@ -815,7 +862,7 @@ public:
 	/// API calling free()
 	/// </summary>
 	/// <returns>void</returns>
-	decltype(auto) operator~() noexcept
+	constexpr decltype(auto) operator~() noexcept
 	{
 		free();
 	}
@@ -824,7 +871,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">Vector to swap</param>
-	decltype(auto) operator^=(vector_rvalue v) noexcept
+	constexpr decltype(auto) operator^=(vector_rvalue v) noexcept
 	{
 		swap(v);
 	}
@@ -833,7 +880,16 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push value</param>
-	decltype(auto) operator+=(value c) noexcept
+	constexpr decltype(auto) operator+=(rvalue c) noexcept
+	{
+		push_back(c);
+	}
+	/// <summary>
+	/// insert value
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="v">push value</param>
+	constexpr decltype(auto) operator+=(reference c) noexcept
 	{
 		push_back(c);
 	}
@@ -842,7 +898,16 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push values from vector</param>
-	decltype(auto) operator+=(vector_rvalue v) noexcept
+	constexpr decltype(auto) operator+=(vector_rvalue v) noexcept
+	{
+		insert(v);
+	}
+	/// <summary>
+	/// insert values from other vector.
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="v">push values from vector</param>
+	constexpr decltype(auto) operator+=(vector_reference v) noexcept
 	{
 		insert(v);
 	}
@@ -852,7 +917,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push values from pointer vector</param>
-	decltype(auto) operator+=(vector_pointer v) noexcept
+	constexpr decltype(auto) operator+=(vector_pointer v) noexcept
 	{
 		if (v)
 			insert(*v);
@@ -862,7 +927,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v">push values from vector</param>
-	decltype(auto) operator+=(const vector_rvalue v) const noexcept
+	constexpr decltype(auto) operator+=(const vector_rvalue v) const noexcept
 	{
 		insert(v);
 	}
@@ -871,7 +936,7 @@ public:
 	/// </summary>
 	/// <param name="i">Index</param>
 	/// <returns>reference</returns>
-	decltype(auto) operator[](size_t i) noexcept
+	constexpr decltype(auto) operator[](size_t i) noexcept
 	{
 		return at(i);
 	}
@@ -880,40 +945,40 @@ public:
 	/// </summary>
 	/// <param name="i">Index</param>
 	/// <returns>const reference value</returns>
-	decltype(auto) operator[](size_t i) const noexcept
+	constexpr decltype(auto) operator[](size_t i) const noexcept
 	{
 		return at(i);
 	}
 
-	__inline decltype(auto) operator<(size_t i) noexcept
+	constexpr __inline decltype(auto) operator<(size_t i) noexcept
 	{
 		return used < i;
 	}
-	__inline decltype(auto) operator>(size_t i) noexcept
+	constexpr __inline decltype(auto) operator>(size_t i) noexcept
 	{
 		return used > i;
 	}
-	__inline decltype(auto) operator<=(size_t i) noexcept
+	constexpr __inline decltype(auto) operator<=(size_t i) noexcept
 	{
 		return used <= i;
 	}
-	__inline decltype(auto) operator>=(size_t i) noexcept
+	constexpr __inline decltype(auto) operator>=(size_t i) noexcept
 	{
 		return used >= i;
 	}
-	__inline decltype(auto) operator<(size_t i) const noexcept
+	constexpr __inline decltype(auto) operator<(size_t i) const noexcept
 	{
 		return used < i;
 	}
-	__inline decltype(auto) operator>(size_t i) const noexcept
+	constexpr __inline decltype(auto) operator>(size_t i) const noexcept
 	{
 		return used > i;
 	}
-	__inline decltype(auto) operator<=(size_t i) const noexcept
+	constexpr __inline decltype(auto) operator<=(size_t i) const noexcept
 	{
 		return used <= i;
 	}
-	__inline decltype(auto) operator>=(size_t i) const noexcept
+	constexpr __inline decltype(auto) operator>=(size_t i) const noexcept
 	{
 		return used >= i;
 	}
@@ -921,7 +986,7 @@ public:
 	/// <summary>
 	///	CONSTRUCTOR null
 	/// </summary>
-	Vector() noexcept
+	constexpr Vector() noexcept
 	{
 		start = nullptr;
 		allocated = used = 0;
@@ -930,7 +995,7 @@ public:
 	///	CONSTRUCTOR reserve
 	/// </summary>
 	/// <param name="sz">Count elements to allocate</param>
-	Vector(size_t sz) : Vector()
+	constexpr Vector(size_t sz) : Vector()
 	{
 		allocate(sz);
 	}
@@ -939,7 +1004,7 @@ public:
 	/// </summary>
 	/// <param name="sz">Count elements to allocate</param>
 	/// <param name="ray">pointer to values</param>
-	Vector(size_t sz, pointer ray) : Vector()
+	constexpr Vector(size_t sz, pointer ray) : Vector()
 	{
 		insert(used, ray, sz);
 	}
@@ -949,7 +1014,7 @@ public:
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	Vector(list_reference v) : Vector()
+	constexpr Vector(list_reference v) : Vector()
 	{
 		insert(v);
 	}
@@ -957,7 +1022,7 @@ public:
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	Vector(list_rvalue v) : Vector()
+	constexpr Vector(list_rvalue v) : Vector()
 	{
 		insert(v);
 	}
@@ -967,7 +1032,7 @@ public:
 	///	CONSTRUCTOR copy
 	/// </summary>
 	/// <param name="v">reference to vector</param>
-	Vector(vector_reference v) : Vector()
+	constexpr Vector(vector_reference v) : Vector()
 	{
 		v.copy(this);
 	}
@@ -975,7 +1040,7 @@ public:
 	///	CONSTRUCTOR copy
 	/// </summary>
 	/// <param name="v">reference to vector</param>
-	Vector(vector_rvalue v) noexcept
+	constexpr Vector(vector_rvalue v) noexcept
 	{
 		v.copy(this);
 	}
