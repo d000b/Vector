@@ -1,8 +1,4 @@
-insert(place, iterator_begin, iterator_end) -> insert(used, iterator_begin, iterator_end) -> push_back(iterator_begin, iterator_end) -> ???
-insert(place, vector) -> insert(used, vector) -> push_back(vector) -> operator+=(vector)
-insert(place, list) -> insert(used, list) -> push_back(list) -> operator+=(list)
-insert(place, value) -> insert(used, value) -> push_back(value) -> operator+=(value)
-
+FIXME CONSTRUCTOR initializer_list
 
 ADD MultidimensionalVector
 COMMENT At the current time (02/16/2021) the problem is that the function cannot return 2 types, and there is no desire to build a template based Vector<Vector<Vector<float>>>
