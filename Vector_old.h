@@ -23,6 +23,11 @@ namespace UltimaAPI
 	template <typename type>  class Vector;
 }
 
+#if defined(GOOGLE_TEST)
+#define CALL(val) std::cout << __FUNCTION__ << ' ' << val << std::endl;
+#else 
+#define CALL(val)
+#endif
 
 template <typename __type__ = int>
 class UltimaAPI::Vector
@@ -39,11 +44,13 @@ public:
 	using list_rvalue = list&&;
 	using list_pointer = list*;
 	using list_reference = list&;
+	using list_const_reference = const list_reference;
 	// Vector
 	using vector = Vector<value>;
 	using vector_rvalue = vector&&;
 	using vector_pointer = vector*;
 	using vector_reference = vector&;
+	using vector_const_reference = const vector_reference;
 	// Iterator
 	using iterator = BasicIterator<value>;
 	using const_iterator = BasicIterator<const value>;
@@ -341,6 +348,48 @@ public:
 		move_insert(used, from);
 	}
 	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="l"> TODO </param>
+	constexpr __inline decltype(auto) move_insert(size_t place, list_rvalue l)
+	{
+		move_insert(place, const_cast<pointer>(l.begin()), l.size());
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="l"> TODO </param>
+	constexpr __inline decltype(auto) move_insert(list_rvalue from)
+	{
+		move_insert(used, from);
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="place">place index element</param>
+	/// <param name="l"> TODO </param>
+	constexpr __inline decltype(auto) move_insert(size_t place, list_reference l)
+	{
+		move_insert(place, const_cast<pointer>(l.begin()), l.size());
+	}
+	/// <summary>
+	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
+	/// Inserting an items into a data block and moving other data if a collision occurred.
+	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="l"> TODO </param>
+	constexpr __inline decltype(auto) move_insert(list_reference from)
+	{
+		move_insert(used, from);
+	}
+	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
 	/// </summary>
@@ -407,50 +456,6 @@ public:
 	{
 		insert(used, from);
 	}
-
-#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// </summary>
-	/// <returns>void</returns>
-	/// <param name="place">place index element</param>
-	/// <param name="l"> TODO </param>
-	constexpr __inline decltype(auto) move_insert(size_t place, list_rvalue l)
-	{
-		move_insert(place, const_cast<pointer>(l.begin()), l.size());
-	}
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// </summary>
-	/// <returns>void</returns>
-	/// <param name="l"> TODO </param>
-	constexpr __inline decltype(auto) move_insert(list_rvalue from)
-	{
-		move_insert(used, from);
-	}
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// </summary>
-	/// <returns>void</returns>
-	/// <param name="place">place index element</param>
-	/// <param name="l"> TODO </param>
-	constexpr __inline decltype(auto) move_insert(size_t place, list_reference l)
-	{
-		move_insert(place, const_cast<pointer>(l.begin()), l.size());
-	}
-	/// <summary>
-	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-	/// Inserting an items into a data block and moving other data if a collision occurred.
-	/// </summary>
-	/// <returns>void</returns>
-	/// <param name="l"> TODO </param>
-	constexpr __inline decltype(auto) move_insert(list_reference from)
-	{
-		move_insert(used, from);
-	}
 	/// <summary>
 	/// Inserting an items into a data block.
 	///	Without moving other data(Erases data) if a collision occurred.
@@ -481,7 +486,7 @@ public:
 	/// <param name="from"> TODO </param>
 	constexpr __inline decltype(auto) insert(size_t place, list_reference from) noexcept
 	{
-		insert(place, const_cast<pointer>(from.begin()), from.size()); // FIXME
+		insert(place, const_cast<pointer>(from.begin()), from.size());
 	}
 	/// <summary>
 	/// Inserting elements at the end of a data block.
@@ -493,8 +498,6 @@ public:
 	{
 		insert(used, from);
 	}
-#endif
-
 	/// <summary>
 	/// Count items entered into the data block
 	/// </summary>
@@ -798,6 +801,13 @@ public:
 			allocate(used);
 	}
 	
+	constexpr decltype(auto) move(vector_rvalue v)
+	{
+		used = v.used;				v.used = 0;
+		start = v.start;			v.start = nullptr;
+		allocated = v.allocated;	v.allocated = 0;
+	}
+
 	/// <summary>
 	/// Iterators
 	/// </summary>
@@ -835,7 +845,20 @@ public:
 		return const_reverse_iterator(cbegin());
 	}
 
-#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
+	constexpr operator bool()
+	{
+		return data() && (size() > 0);
+	}
+
+	constexpr decltype(auto) operator=(vector_rvalue v)
+	{
+		return vector(v);
+	}
+	constexpr decltype(auto) operator=(vector_reference v)
+	{
+		return vector(v);
+	}
+
 	/// <summary>
 	/// Operator for inserting values from the initialization_list.
 	///	The old vector values in the data block will be forgotten (lost).
@@ -856,8 +879,6 @@ public:
 	{
 		insert(v);
 	}
-#endif
-
 	/// <summary>
 	/// API calling free()
 	/// </summary>
@@ -990,6 +1011,7 @@ public:
 	{
 		start = nullptr;
 		allocated = used = 0;
+		CALL("null")
 	}
 	/// <summary>
 	///	CONSTRUCTOR reserve
@@ -998,6 +1020,7 @@ public:
 	constexpr Vector(size_t sz) : Vector()
 	{
 		allocate(sz);
+		CALL("reserve")
 	}
 	/// <summary>
 	///	CONSTRUCTOR insert from array
@@ -1006,35 +1029,35 @@ public:
 	/// <param name="ray">pointer to values</param>
 	constexpr Vector(size_t sz, pointer ray) : Vector()
 	{
-		insert(used, ray, sz);
+		push_back(ray, sz);
+		CALL("ray")
 	}
-
-#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
 	/// <summary>
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	constexpr Vector(list_reference v) : Vector()
+	constexpr Vector(list_const_reference v) : Vector()
 	{
 		insert(v);
+		CALL("list_reference")
 	}
 	/// <summary>
-	///	CONSTRUCTOR initializer_list
+	///	CONSTRUCTOR move
 	/// </summary>
 	/// <param name="v"> TODO </param>
 	constexpr Vector(list_rvalue v) : Vector()
 	{
 		insert(v);
+		CALL("list_rvalue")
 	}
-#endif
-
 	/// <summary>
 	///	CONSTRUCTOR copy
 	/// </summary>
 	/// <param name="v">reference to vector</param>
-	constexpr Vector(vector_reference v) : Vector()
+	constexpr Vector(vector_const_reference v) : Vector()
 	{
 		v.copy(this);
+		CALL("vector_reference")
 	}
 	/// <summary>
 	///	CONSTRUCTOR copy
@@ -1042,7 +1065,8 @@ public:
 	/// <param name="v">reference to vector</param>
 	constexpr Vector(vector_rvalue v) noexcept
 	{
-		v.copy(this);
+		move(v);
+		CALL("vector_rvalue")
 	}
 	/// <summary>
 	///	DESTRUCTOR
@@ -1050,5 +1074,6 @@ public:
 	~Vector() noexcept
 	{
 		free();
+		CALL(' ')
 	}
 };
