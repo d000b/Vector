@@ -268,7 +268,7 @@ public:
 		if (insert_correct(place))
 		{
 			auto place_used = place + 1;
-			memcpy(start + place_used, start + place, (used - place_used) * size_value());
+			Memory::memcpy(start + place_used, start + place, (used - place_used) * size_value());
 		}
 		start[place] = val;
 	}
