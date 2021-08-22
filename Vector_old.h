@@ -23,11 +23,6 @@ namespace UltimaAPI
 	template <typename type>  class Vector;
 }
 
-#if defined(GOOGLE_TEST)
-#define CALL(val) std::cout << __FUNCTION__ << ' ' << val << std::endl;
-#else 
-#define CALL(val)
-#endif
 
 template <typename __type__ = int>
 class UltimaAPI::Vector
@@ -65,7 +60,7 @@ public:
 private:
 	static constexpr double mul_alloc = 1.6487;
 
-	static_assert(std::is_pod<value>::value, "In the current version it is not possible to work with non-POD type");
+	static_assert(std::is_trivially_copyable<value>::value, "In the current version it is not possible to work with non-POD type");
 
 	/// <summary>
 	///  TODO 
@@ -1011,7 +1006,6 @@ public:
 	{
 		start = nullptr;
 		allocated = used = 0;
-		CALL("null")
 	}
 	/// <summary>
 	///	CONSTRUCTOR reserve
@@ -1020,7 +1014,6 @@ public:
 	constexpr Vector(size_t sz) : Vector()
 	{
 		allocate(sz);
-		CALL("reserve")
 	}
 	/// <summary>
 	///	CONSTRUCTOR insert from array
@@ -1030,7 +1023,6 @@ public:
 	constexpr Vector(size_t sz, pointer ray) : Vector()
 	{
 		push_back(ray, sz);
-		CALL("ray")
 	}
 	/// <summary>
 	///	CONSTRUCTOR initializer_list
@@ -1039,7 +1031,6 @@ public:
 	constexpr Vector(list_const_reference v) : Vector()
 	{
 		insert(v);
-		CALL("list_reference")
 	}
 	/// <summary>
 	///	CONSTRUCTOR move
@@ -1048,7 +1039,6 @@ public:
 	constexpr Vector(list_rvalue v) : Vector()
 	{
 		insert(v);
-		CALL("list_rvalue")
 	}
 	/// <summary>
 	///	CONSTRUCTOR copy
@@ -1057,7 +1047,6 @@ public:
 	constexpr Vector(vector_const_reference v) : Vector()
 	{
 		v.copy(this);
-		CALL("vector_reference")
 	}
 	/// <summary>
 	///	CONSTRUCTOR copy
@@ -1066,7 +1055,6 @@ public:
 	constexpr Vector(vector_rvalue v) noexcept
 	{
 		move(v);
-		CALL("vector_rvalue")
 	}
 	/// <summary>
 	///	DESTRUCTOR
@@ -1074,6 +1062,5 @@ public:
 	~Vector() noexcept
 	{
 		free();
-		CALL(' ')
 	}
 };
