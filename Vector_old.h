@@ -58,9 +58,9 @@ private:
 public:
 	static constexpr size_t npos = -1;
 private:
-	static constexpr double mul_alloc = 1.6487;
+	static constexpr double mul_alloc = 1.6487; // (deleted info) is sqrt(e)
 
-	static_assert(std::is_trivially_copyable<value>::value, "In the current version it is not possible to work with non-POD type");
+//	static_assert(std::is_trivially_copyable<value>::value, "In the current version it is not possible to work with non-POD type");
 
 	/// <summary>
 	///  TODO 
