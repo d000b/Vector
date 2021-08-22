@@ -131,20 +131,19 @@ private:
 		else free();
 	}
 	/// <summary>
-	///	The function checks if it is possible to insert elements without having to shift.
+	///	TODO
 	/// </summary>
-	/// <returns>true, if need moving data</returns>
-	/// <param name="place">place index element</param>
-	constexpr decltype(auto) insert_correct(size_t place)
+	/// <param name="place">place index elements</param>
+	/// <param name="count">count elements</param>
+	constexpr decltype(auto) without_correct(size_t place, size_t count = 1)
 	{
-		bool ret = true;
-		if (place > used)
+		if (count > 0)
 		{
-			used = place;
-			ret = false;
+			auto next_used = place + count;
+			if (next_used > used)
+				used = next_used;
+			check_allocate();
 		}
-		check_allocate();
-		return ret;
 	}
 	/// <summary>
 	///	The function checks if it is possible to insert elements without having to shift.
@@ -152,14 +151,13 @@ private:
 	/// <returns>true, if need moving data</returns>
 	/// <param name="place">place index elements</param>
 	/// <param name="count">count elements</param>
-	constexpr decltype(auto) insert_correct(size_t place, size_t count)
+	constexpr decltype(auto) insert_correct(size_t place, size_t count = 1)
 	{
-		bool ret = true;
-		if (place >= used)
-			ret = false;
-		auto next_used = place + count;
-		if (next_used > used)
-			used = next_used;
+		bool ret = false;
+		if (place < used)
+			ret = true;
+		else used = place;
+		used += count;
 		check_allocate();
 		return ret;
 	}
@@ -174,8 +172,7 @@ public:
 		if (i >= used)
 		{
 			used = i + 1;
-			if (i >= allocated)
-				allocate(index_step(i));
+			check_allocate();
 		}
 		return reference(start[i]);
 	}
@@ -269,7 +266,10 @@ public:
 	constexpr decltype(auto) move_insert(size_t place, rvalue val)
 	{
 		if (insert_correct(place))
-			Memory::memcpy(start + place + 1, start + place, used - place);
+		{
+			auto place_used = place + 1;
+			memcpy(start + place_used, start + place, used - place_used);
+		}
 		start[place] = val;
 	}
 	/// <summary>
@@ -282,7 +282,10 @@ public:
 	constexpr decltype(auto) move_insert(size_t place, const_reference val)
 	{
 		if (insert_correct(place))
-			Memory::memcpy(start + place + 1, start + place, used - place);
+		{
+			auto place_used = place + 1;
+			memcpy(start + place_used, start + place, used - place_used);
+		}
 		start[place] = val;
 	}
 	/// <summary>
@@ -295,10 +298,13 @@ public:
 	/// <param name="count">counts elements</param>
 	constexpr decltype(auto) move_insert(size_t place, pointer val, size_t count)
 	{
-		auto place_address = start + place;
-		if (insert_correct(place, count))
-			Memory::memcpy(place_address + count, place_address, used - place);
-		Memory::memcpy(place_address, val, count * size_value());
+		if (count > 0)
+		{
+			auto place_address = start + place;
+			if (insert_correct(place, count))
+				Memory::memcpy(place_address + count, place_address, used - place - count);
+			memcpy(place_address, val, count * size_value());
+		}
 	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
@@ -393,7 +399,7 @@ public:
 	/// <param name="val">element to push</param>
 	constexpr decltype(auto) insert(size_t place, rvalue val) noexcept
 	{
-		insert_correct(place);
+		without_correct(place);
 		start[place] = val;
 	}
 	/// <summary>
@@ -406,8 +412,11 @@ public:
 	/// <param name="count">counts elements</param>
 	constexpr decltype(auto) insert(size_t place, pointer val, size_t count) noexcept
 	{
-		insert_correct(place, count);
-		memcpy(start + place, val, count * size_value());
+		if (count > 0)
+		{
+			without_correct(place, count);
+			memcpy(start + place, val, count * size_value());
+		}
 	}
 	/// <summary>
 	/// Inserting an items into a data block.
@@ -853,7 +862,6 @@ public:
 	{
 		return vector(v);
 	}
-
 	/// <summary>
 	/// Operator for inserting values from the initialization_list.
 	///	The old vector values in the data block will be forgotten (lost).
