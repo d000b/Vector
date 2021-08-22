@@ -120,13 +120,7 @@ private:
 			if (!start)
 				start = new value[allocated = al];
 			else if (al == allocated); // maybe adding code to do something!
-			else
-			{
-				value* block;
-				memcpy(block = new value[allocated = al], start, (used = used > al ? al : used) * size_value());
-				delete[] start;
-				start = block;
-			}
+			else movecopy(al);
 		}
 		else free();
 	}
@@ -160,6 +154,36 @@ private:
 		used += count;
 		check_allocate();
 		return ret;
+	}
+	/// <summary>
+	///	A shell to call std::copy. for minimal changes from memcpy.
+	/// </summary>
+	/// <param name="dest">To copy(new block memory)</param>
+	/// <param name="src">From copy(old block memory)</param>
+	/// <param name="count">count elements to copy</param>
+	__inline constexpr decltype(auto) copy(pointer dest, const pointer src, size_t count)
+	{
+		std::copy(src, src + count, dest);
+	}
+	/// <summary>
+	///	Copying to a new data block. Deleting the old data block.Returns the pointer to the new data block.
+	/// </summary>
+	/// <param name="dest">To copy(new block memory)</param>
+	/// <param name="src">From copy(old block memory)</param>
+	/// <param name="count">count elements to copy</param>
+	__inline constexpr decltype(auto) copy_free(pointer dest, const pointer src, size_t count)
+	{
+		copy(dest, src, count);
+		delete[] src;
+		return dest;
+	}
+	/// <summary>
+	///	TODO
+	/// </summary>
+	/// <param name="al">New block size</param>
+	__inline constexpr decltype(auto) movecopy(size_t al)
+	{
+		start = copy_free(new value[allocated = al], start, (used = used > al ? al : used));
 	}
 public:
 	/// <summary>
@@ -268,7 +292,7 @@ public:
 		if (insert_correct(place))
 		{
 			auto place_used = place + 1;
-			Memory::memcpy(start + place_used, start + place, (used - place_used) * size_value());
+			copy(start + place_used, start + place, used - place_used);
 		}
 		start[place] = val;
 	}
@@ -284,7 +308,7 @@ public:
 		if (insert_correct(place))
 		{
 			auto place_used = place + 1;
-			Memory::memcpy(start + place_used, start + place, (used - place_used) * size_value());
+			copy(start + place_used, start + place, used - place_used);
 		}
 		start[place] = val;
 	}
@@ -302,8 +326,8 @@ public:
 		{
 			auto place_address = start + place;
 			if (insert_correct(place, count))
-				Memory::memcpy(place_address + count, place_address, (used - place - count) * size_value());
-			memcpy(place_address, val, count * size_value());
+				copy(place_address + count, place_address, used - place - count);
+			copy(place_address, val, count);
 		}
 	}
 	/// <summary>
@@ -415,7 +439,7 @@ public:
 		if (count > 0)
 		{
 			without_correct(place, count);
-			memcpy(start + place, val, count * size_value());
+			copy(start + place, val, count);
 		}
 	}
 	/// <summary>
@@ -544,7 +568,7 @@ public:
 	{
 		v->allocate(allocated);
 		if (used)
-			memcpy(v->start, start, (v->used = used) * size_value());
+			copy(v->start, start, v->used = used);
 	}
 	/// <summary>
 	/// Copies the contents of the data block.
@@ -556,7 +580,7 @@ public:
 	{
 		v->allocate(allocated);
 		if (used)
-			memcpy(v->start, start, (v->used = used) * size_value());
+			copy(v->start, start, v->used = used);
 	}
 	/// <summary>
 	/// Clears the contents of the data block without erasing previous data.
@@ -581,7 +605,7 @@ public:
 	/// <param name="i">Index to the element</param>
 	constexpr decltype(auto) erase(size_t i) noexcept
 	{
-		start[i] = 0; // ?? memcpy(start + i, )
+		start[i] = value();
 	}
 	/// <summary>
 	/// Address for writing the next item.
