@@ -268,7 +268,7 @@ public:
 		if (insert_correct(place))
 		{
 			auto place_used = place + 1;
-			memcpy(start + place_used, start + place, used - place_used);
+			memcpy(start + place_used, start + place, (used - place_used) * size_value());
 		}
 		start[place] = val;
 	}
@@ -284,7 +284,7 @@ public:
 		if (insert_correct(place))
 		{
 			auto place_used = place + 1;
-			memmove(start + place_used, start + place, used - place_used);
+			Memory::memcpy(start + place_used, start + place, (used - place_used) * size_value());
 		}
 		start[place] = val;
 	}
@@ -302,7 +302,7 @@ public:
 		{
 			auto place_address = start + place;
 			if (insert_correct(place, count))
-				memmove(place_address + count, place_address, used - place - count);
+				Memory::memcpy(place_address + count, place_address, (used - place - count) * size_value());
 			memcpy(place_address, val, count * size_value());
 		}
 	}
