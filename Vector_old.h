@@ -284,7 +284,7 @@ public:
 		if (insert_correct(place))
 		{
 			auto place_used = place + 1;
-			memcpy(start + place_used, start + place, used - place_used);
+			memmove(start + place_used, start + place, used - place_used);
 		}
 		start[place] = val;
 	}
@@ -302,7 +302,7 @@ public:
 		{
 			auto place_address = start + place;
 			if (insert_correct(place, count))
-				Memory::memcpy(place_address + count, place_address, used - place - count);
+				memmove(place_address + count, place_address, used - place - count);
 			memcpy(place_address, val, count * size_value());
 		}
 	}
