@@ -2,16 +2,20 @@
 
 namespace UltimaAPI
 {
-	template <typename __type__>
-	class MultiVector
-	{
-		using value = __type__;
-		using rvalue = value&&;
-		using pointer = value*;
-		using reference = value&;
-	protected:
-
-	public:
-
-	};
+	template <typename type> class MultiVector;
 }
+
+
+template <typename __type__>
+class UltimaAPI::MultiVector
+{
+public:
+	using value = __type__;
+	using rvalue = value&&;
+	using pointer = value*;
+	using reference = value&;
+protected:
+
+public:
+
+};
