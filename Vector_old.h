@@ -920,6 +920,8 @@ public:
 
 	constexpr decltype(auto) strict_equal_elements(vector_const_reference other)
 	{
+		if (start == other.start)
+			return true;
 		const auto tmp(*this);
 		for (size_t i = 0; i < used; i++)
 			if (tmp[i] != other[i])
@@ -932,7 +934,7 @@ public:
 	}
 	constexpr decltype(auto) strict_equality(vector_const_reference other)
 	{
-		return rough_parity() && strict_equal_elements(other);
+		return rough_parity(other) && strict_equal_elements(other);
 	}
 
 	constexpr operator bool()
@@ -1058,6 +1060,23 @@ public:
 	constexpr decltype(auto) operator[](size_t i) const noexcept
 	{
 		return at(i);
+	}
+
+	constexpr __inline decltype(auto) operator!=(vector_const_reference v)
+	{
+		return !operator==(v);
+	}
+	constexpr __inline decltype(auto) operator==(vector_const_reference v)
+	{
+		return rough_parity(v);
+	}
+	constexpr __inline decltype(auto) operator!=(vector_rvalue v)
+	{
+		return !operator==(v);
+	}
+	constexpr __inline decltype(auto) operator==(vector_rvalue v)
+	{
+		return rough_parity(v);
 	}
 
 	constexpr __inline decltype(auto) operator<(size_t i) noexcept
