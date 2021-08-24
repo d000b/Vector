@@ -936,24 +936,6 @@ public:
 	{
 		return rough_parity(other) && strict_equal_elements(other);
 	}
-	constexpr decltype(auto) strict_equal_elements(vector_rvalue other)
-	{
-		if (start == other.start)
-			return true;
-		const auto tmp(*this);
-		for (size_t i = 0; i < used; i++)
-			if (tmp[i] != other[i])
-				return false;
-		return true;
-	}
-	constexpr decltype(auto) rough_parity(vector_rvalue other)
-	{
-		return used == other.used && allocated == other.allocated;
-	}
-	constexpr decltype(auto) strict_equality(vector_rvalue other)
-	{
-		return rough_parity(other) && strict_equal_elements(other);
-	}
 
 	constexpr operator bool()
 	{
@@ -1085,14 +1067,6 @@ public:
 		return !operator==(v);
 	}
 	constexpr __inline decltype(auto) operator==(vector_const_reference v)
-	{
-		return rough_parity(v);
-	}
-	constexpr __inline decltype(auto) operator!=(vector_rvalue v)
-	{
-		return !operator==(v);
-	}
-	constexpr __inline decltype(auto) operator==(vector_rvalue v)
 	{
 		return rough_parity(v);
 	}
