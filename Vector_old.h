@@ -106,7 +106,15 @@ private:
 		if (used >= allocated)
 			allocate(used_step());
 	}
-	/// <summary>
+	///	<summary>
+	/// Increases the block for writing data if necessary
+	/// </summary>
+	/// <returns>void</returns>
+	constexpr decltype(auto) check_allocate(size_t use) noexcept
+	{
+		if (use >= allocated)
+			allocate(index_step(use));
+	}
 	///	Creates in memory, changes, deletes block of elements - a vector, 
 	///	the function should not be called without a shell. 
 	///	To use this function, it should be called through the reserve(...) function.
@@ -127,17 +135,34 @@ private:
 	/// <summary>
 	///	TODO
 	/// </summary>
+	/// <returns>void</returns>
+	/// <param name="al">count elements to alloc in memory</param>
+	constexpr decltype(auto) allocate_copy(size_t al, size_t place, size_t count, bool need) noexcept
+	{
+		if (al > allocated)
+		{
+			if (!start)
+				start = new value[allocated = al];
+			else if (al == allocated); // maybe adding code to do something!
+			else copy_free(new value[allocated = al], place, count, need);
+		}
+		else if (need)
+		{
+			auto placed = start + place;
+			copy(placed + count, placed, used - place);
+		}
+	}
+	/// <summary>
+	///	TODO
+	/// </summary>
 	/// <param name="place">place index elements</param>
 	/// <param name="count">count elements</param>
 	constexpr decltype(auto) without_correct(size_t place, size_t count = 1)
 	{
-		if (count > 0)
-		{
-			auto next_used = place + count;
-			if (next_used > used)
-				used = next_used;
-			check_allocate();
-		}
+		auto next_used = place + count;
+		check_allocate(next_used);
+		if (next_used > used)
+			used = next_used;
 	}
 	/// <summary>
 	///	The function checks if it is possible to insert elements without having to shift.
@@ -147,13 +172,19 @@ private:
 	/// <param name="count">count elements</param>
 	constexpr decltype(auto) insert_correct(size_t place, size_t count = 1)
 	{
-		bool ret = false;
+		/// [0; place]		(copy as in allocate memory)
+		/// [place, used]	(copy with a shift relative to the current position by count)
+		/// [place; place + count]	(Then return from the function and fill in the missing part)
+		bool correct = false;
+		size_t new_used = place;
 		if (place < used)
-			ret = true;
-		else used = place;
-		used += count;
-		check_allocate();
-		return ret;
+		{
+			new_used = used;
+			correct = true;
+		}
+		new_used += count;
+		allocate_copy(index_step(new_used), place, count, correct);
+		used = new_used;
 	}
 	/// <summary>
 	///	A shell to call std::copy. for minimal changes from memcpy.
@@ -165,7 +196,6 @@ private:
 	{
 		std::copy(src, src + count, dest);
 	}
-	/// <summary>
 	///	Copying to a new data block. Deleting the old data block.Returns the pointer to the new data block.
 	/// </summary>
 	/// <param name="dest">To copy(new block memory)</param>
@@ -176,6 +206,22 @@ private:
 		copy(dest, src, count);
 		delete[] src;
 		return dest;
+	}
+	/// <summary>
+	///	A special version of the function for insert_correct(...), it is called only in allocate_copy(...). 
+	/// (changes are possible in the future, please notify me if you have them).  
+	/// </summary>
+	/// <param name="dest">To copy(new block memory)</param>
+	/// <param name="place">position for inserting new values</param>
+	/// <param name="count">count elements to copy</param>
+	/// <param name="need">whether it is necessary to copy from the original vector the old part (this variable should give true when place less used)</param>
+	__inline constexpr decltype(auto) copy_free(pointer dest, size_t place, size_t count, bool need)
+	{
+		copy(dest, start, place);
+		if (need)
+			copy(dest + place + count, start + place, used - place);
+		delete[] start;
+		start = dest;
 	}
 	/// <summary>
 	///	TODO
@@ -324,10 +370,8 @@ public:
 	{
 		if (count > 0)
 		{
-			auto place_address = start + place;
-			if (insert_correct(place, count))
-				copy(place_address + count, place_address, used - place - count);
-			copy(place_address, val, count);
+			insert_correct(place, count);
+			copy((start + place), val, count);
 		}
 	}
 	/// <summary>
@@ -873,6 +917,24 @@ public:
 		return const_reverse_iterator(cbegin());
 	}
 
+
+	constexpr decltype(auto) strict_equal_elements(vector_const_reference other)
+	{
+		const auto tmp(*this);
+		for (size_t i = 0; i < used; i++)
+			if (tmp[i] != other[i])
+				return false;
+		return true;
+	}
+	constexpr decltype(auto) rough_parity(vector_const_reference other)
+	{
+		return used == other.used && allocated == other.allocated;
+	}
+	constexpr decltype(auto) strict_equality(vector_const_reference other)
+	{
+		return rough_parity() && strict_equal_elements(other);
+	}
+
 	constexpr operator bool()
 	{
 		return data() && (size() > 0);
@@ -1040,23 +1102,6 @@ public:
 		allocated = used = 0;
 	}
 	/// <summary>
-	///	CONSTRUCTOR reserve
-	/// </summary>
-	/// <param name="sz">Count elements to allocate</param>
-	constexpr Vector(size_t sz) : Vector()
-	{
-		allocate(sz);
-	}
-	/// <summary>
-	///	CONSTRUCTOR insert from array
-	/// </summary>
-	/// <param name="sz">Count elements to allocate</param>
-	/// <param name="ray">pointer to values</param>
-	constexpr Vector(size_t sz, pointer ray) : Vector()
-	{
-		push_back(ray, sz);
-	}
-	/// <summary>
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
@@ -1087,6 +1132,23 @@ public:
 	constexpr Vector(vector_rvalue v) noexcept
 	{
 		move(v);
+	}
+	/// <summary>
+	///	CONSTRUCTOR reserve
+	/// </summary>
+	/// <param name="sz">Count elements to allocate</param>
+	constexpr explicit Vector(size_t sz) : Vector()
+	{
+		allocate(sz);
+	}
+	/// <summary>
+	///	CONSTRUCTOR insert from array
+	/// </summary>
+	/// <param name="sz">Count elements to allocate</param>
+	/// <param name="ray">pointer to values</param>
+	constexpr explicit Vector(size_t sz, pointer ray) : Vector()
+	{
+		push_back(ray, sz);
 	}
 	/// <summary>
 	///	DESTRUCTOR
