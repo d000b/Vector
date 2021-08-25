@@ -892,6 +892,22 @@ public:
 	{
 		return iterator(last());
 	}
+	constexpr decltype(auto) begin() const noexcept
+	{
+		return iterator(start);
+	}
+	constexpr decltype(auto) end() const noexcept
+	{
+		return iterator(last());
+	}
+	constexpr decltype(auto) cbegin() noexcept
+	{
+		return const_iterator(start);
+	}
+	constexpr decltype(auto) cend() noexcept
+	{
+		return const_iterator(last());
+	}
 	constexpr decltype(auto) cbegin() const noexcept
 	{
 		return const_iterator(start);
@@ -907,6 +923,22 @@ public:
 	constexpr decltype(auto) rend() noexcept
 	{
 		return reverse_iterator(begin());
+	}
+	constexpr decltype(auto) rbegin() const noexcept
+	{
+		return reverse_iterator(end());
+	}
+	constexpr decltype(auto) rend() const noexcept
+	{
+		return reverse_iterator(begin());
+	}
+	constexpr decltype(auto) crbegin() noexcept
+	{
+		return const_reverse_iterator(cend());
+	}
+	constexpr decltype(auto) crend() noexcept
+	{
+		return const_reverse_iterator(cbegin());
 	}
 	constexpr decltype(auto) crbegin() const noexcept
 	{
