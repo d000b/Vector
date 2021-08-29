@@ -57,7 +57,7 @@ namespace UltimaAPI
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	private:
-		// fork "Allocator, See previous commit"
+		allocator _allocator;
 	public:
 		static constexpr size_t npos = -1;
 	private:
