@@ -28,7 +28,7 @@ namespace UltimaAPI
 		class __locator__ = LocatorSizer<int>, 
 		class __allocator__ = Allocator<__locator__>
 	>
-	class Vector
+	class Vector : public __allocator__
 	{
 		using locator = __locator__;
 		using allocator = __allocator__;
