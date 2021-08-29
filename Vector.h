@@ -57,106 +57,10 @@ namespace UltimaAPI
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	private:
-		size_t	used;
-		size_t	allocated;
-		pointer	start;
+		// fork "Allocator, See previous commit"
 	public:
 		static constexpr size_t npos = -1;
 	private:
-		static constexpr double mul_alloc = 1.6487; // (deleted info) is sqrt(e)
-	
-	//	static_assert(std::is_trivially_copyable<value>::value, "In the current version it is not possible to work with non-POD type");
-	
-		/// <summary>
-		///  TODO 
-		/// https://en.cppreference.com/w/cpp/named_req/MoveAssignable
-		/// https://en.cppreference.com/w/cpp/named_req/MoveInsertable
-		/// https://en.cppreference.com/w/cpp/named_req/EmplaceConstructible
-		/// </summary>
-	
-	
-		/// <summary>
-		/// allocated version
-		/// The next step in the size of the data block.
-		/// </summary>
-		/// <returns>size_t</returns>
-		constexpr decltype(auto) alloc_step()
-		{
-			return size_t(allocated * mul_alloc + 1);
-		}
-		/// <summary>
-		/// used version
-		/// The next step in the size of the data block.
-		/// </summary>
-		/// <returns>size_t</returns>
-		constexpr decltype(auto) used_step()
-		{
-			return size_t(used * mul_alloc + 1);
-		}
-		/// <summary>
-		/// index version
-		/// The next step in the size of the data block.
-		/// </summary>
-		/// <returns>size_t</returns>
-		constexpr decltype(auto) index_step(size_t idx)
-		{
-			return size_t(idx * mul_alloc + 1);
-		}
-		///	<summary>
-		/// Increases the block for writing data if necessary
-		/// </summary>
-		/// <returns>void</returns>
-		constexpr decltype(auto) check_allocate() noexcept
-		{
-			if (used >= allocated)
-				allocate(used_step());
-		}
-		///	<summary>
-		/// Increases the block for writing data if necessary
-		/// </summary>
-		/// <returns>void</returns>
-		constexpr decltype(auto) check_allocate(size_t use) noexcept
-		{
-			if (use >= allocated)
-				allocate(index_step(use));
-		}
-		///	Creates in memory, changes, deletes block of elements - a vector, 
-		///	the function should not be called without a shell. 
-		///	To use this function, it should be called through the reserve(...) function.
-		/// </summary>
-		/// <returns>void</returns>
-		/// <param name="al">count elements to alloc in memory</param>
-		constexpr decltype(auto) allocate(size_t al) noexcept
-		{
-			if (al)
-			{
-				if (!start)
-					start = new value[allocated = al];
-				else if (al == allocated); // maybe adding code to do something!
-				else movecopy(al);
-			}
-			else free();
-		}
-		/// <summary>
-		///	TODO
-		/// </summary>
-		/// <returns>void</returns>
-		/// <param name="al">count elements to alloc in memory</param>
-		constexpr decltype(auto) allocate_copy(size_t al, size_t place, size_t count, bool need) noexcept
-		{
-			if (al > allocated)
-			{
-				if (!start)
-					start = new value[allocated = al];
-				else if (al == allocated); // maybe adding code to do something!
-				else copy_free(new value[allocated = al], place, count, need);
-			}
-			else if (need)
-			{
-				auto placed = start + place;
-				copy(placed + count, placed, used - place);
-			}
-		}
 		/// <summary>
 		///	TODO
 		/// </summary>
@@ -190,51 +94,6 @@ namespace UltimaAPI
 			new_used += count;
 			allocate_copy(index_step(new_used), place, count, correct);
 			used = new_used;
-		}
-		/// <summary>
-		///	A shell to call std::copy. for minimal changes from memcpy.
-		/// </summary>
-		/// <param name="dest">To copy(new block memory)</param>
-		/// <param name="src">From copy(old block memory)</param>
-		/// <param name="count">count elements to copy</param>
-		__inline constexpr decltype(auto) copy(pointer dest, const pointer src, size_t count)
-		{
-			std::copy(src, src + count, dest);
-		}
-		///	Copying to a new data block. Deleting the old data block.Returns the pointer to the new data block.
-		/// </summary>
-		/// <param name="dest">To copy(new block memory)</param>
-		/// <param name="src">From copy(old block memory)</param>
-		/// <param name="count">count elements to copy</param>
-		__inline constexpr decltype(auto) copy_free(pointer dest, const pointer src, size_t count)
-		{
-			copy(dest, src, count);
-			delete[] src;
-			return dest;
-		}
-		/// <summary>
-		///	A special version of the function for insert_correct(...), it is called only in allocate_copy(...). 
-		/// (changes are possible in the future, please notify me if you have them).  
-		/// </summary>
-		/// <param name="dest">To copy(new block memory)</param>
-		/// <param name="place">position for inserting new values</param>
-		/// <param name="count">count elements to copy</param>
-		/// <param name="need">whether it is necessary to copy from the original vector the old part (this variable should give true when place less used)</param>
-		__inline constexpr decltype(auto) copy_free(pointer dest, size_t place, size_t count, bool need)
-		{
-			copy(dest, start, place);
-			if (need)
-				copy(dest + place + count, start + place, used - place);
-			delete[] start;
-			start = dest;
-		}
-		/// <summary>
-		///	TODO
-		/// </summary>
-		/// <param name="al">New block size</param>
-		__inline constexpr decltype(auto) movecopy(size_t al)
-		{
-			start = copy_free(new value[allocated = al], start, (used = used > al ? al : used));
 		}
 	public:
 		/// <summary>
