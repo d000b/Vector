@@ -15,16 +15,23 @@
 #include <memory.h>
 #include <initializer_list>
 
+#define ALLOCATOR_VERSION_VECTOR // it is necessary for the BasicIterator to create a pattern
 #include "../BasicIterator/BasicIterator.h"
 #include "../Allocator/Allocator.h"
 #include "../Memory/util.h"
 
+
 namespace UltimaAPI
 {
-	template <typename __type__ = int, class __locator__ = Allocator<int>>
+	template <
+		typename __type__ = int, 
+		class __locator__ = LocatorSizer<int>, 
+		class __allocator__ = Allocator<__locator__>
+	>
 	class Vector
 	{
 		using locator = __locator__;
+		using alocator = __allocator__;
 	public:
 		// Value
 		using value = __type__;
