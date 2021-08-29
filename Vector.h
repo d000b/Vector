@@ -31,7 +31,7 @@ namespace UltimaAPI
 	class Vector
 	{
 		using locator = __locator__;
-		using alocator = __allocator__;
+		using allocator = __allocator__;
 	public:
 		// Value
 		using value = __type__;
@@ -46,7 +46,7 @@ namespace UltimaAPI
 		using list_reference = list&;
 		using list_const_reference = const list_reference;
 		// Vector
-		using vector = Vector<value>;
+		using vector = Vector<value, locator, allocator>;
 		using vector_rvalue = vector&&;
 		using vector_pointer = vector*;
 		using vector_reference = vector&;
