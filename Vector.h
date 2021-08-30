@@ -18,7 +18,6 @@
 #define ALLOCATOR_VERSION_VECTOR // it is necessary for the BasicIterator to create a pattern
 #include "../BasicIterator/BasicIterator.h"
 #include "../Allocator/Allocator.h"
-#include "../Memory/util.h"
 
 
 namespace UltimaAPI
