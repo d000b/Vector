@@ -24,12 +24,12 @@ namespace UltimaAPI
 {
 	template <
 		typename __type__ = int, 
-		class __locator__ = LocatorSizer<int>, 
-		class __allocator__ = Allocator<__locator__>
+		class __container__ = LocatorSizer<int>, 
+		class __allocator__ = AllocatorLinear<__container__>
 	>
 	class Vector : public __allocator__
 	{
-		using locator = __locator__;
+		using container = __container__;
 		using allocator = __allocator__;
 	public:
 		// Value
@@ -45,7 +45,7 @@ namespace UltimaAPI
 		using list_reference = list&;
 		using list_const_reference = const list_reference;
 		// Vector
-		using vector = Vector<value, locator, allocator>;
+		using vector = Vector<value, container, allocator>;
 		using vector_rvalue = vector&&;
 		using vector_pointer = vector*;
 		using vector_reference = vector&;
@@ -66,9 +66,9 @@ namespace UltimaAPI
 		constexpr decltype(auto) without_correct(size_t place, size_t count = 1)
 		{
 			auto next_used = place + count;
-			check_allocate(next_used);
-			if (next_used > used)
-				used = next_used;
+			allocator::check_allocate(next_used);
+			if (next_used > size())
+				allocator::new_size(next_used);
 		}
 		/// <summary>
 		///	The function checks if it is possible to insert elements without having to shift.
@@ -89,8 +89,8 @@ namespace UltimaAPI
 				correct = true;
 			}
 			new_used += count;
-			allocate_copy(index_step(new_used), place, count, correct);
-			used = new_used;
+			allocator::allocate_copy(allocator::index_step(new_used), place, count, correct);
+			allocator::new_size(new_used);
 		}
 	public:
 		/// <summary>
@@ -100,12 +100,12 @@ namespace UltimaAPI
 		/// <param name="i">Index</param>
 		constexpr decltype(auto) at(size_t i)
 		{
-			if (i >= used)
+			if (i >= size())
 			{
-				used = i + 1;
-				check_allocate();
+				allocator::new_size(i + 1);
+				allocator::check_allocate();
 			}
-			return reference(start[i]);
+			return reference(allocator::start[i]);
 		}
 		/// <summary>
 		///	BEWARE out-from-range
@@ -115,7 +115,7 @@ namespace UltimaAPI
 		/// <param name="i">Index</param>
 		constexpr decltype(auto) at(size_t i) const
 		{
-			return const_reference(start[i]);
+			return const_reference(allocator::start[i]);
 		}
 		/// <summary>
 		///	Inserting an element at the end of a data block.
@@ -125,8 +125,8 @@ namespace UltimaAPI
 		/// <param name="val">element to push</param>
 		constexpr decltype(auto) push_back(rvalue val) noexcept
 		{
-			check_allocate();
-			start[used] = val;
+			allocator::check_allocate();
+			allocator::start[used] = val;
 			++used;
 		}
 		/// <summary>
@@ -437,7 +437,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() noexcept
 		{
-			return used;
+			return allocator::size();
 		}
 		/// <summary>
 		/// Count items entered into the data block
@@ -445,7 +445,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() const noexcept
 		{
-			return used;
+			return allocator::size();
 		}
 		/// <summary>
 		/// Maximum number of items that can be placed without the need to reallocate.
