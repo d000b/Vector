@@ -31,8 +31,9 @@ namespace UltimaAPI
 	{
 	//	using container = __container__;
 	//	using allocator = __allocator__;
-		using container = Container<__type__>;
-		using allocator = Allocator<container>;
+		using locator =		Locator<__type__>;
+		using container =	Container<__type__>;
+		using allocator =	Allocator<container>;
 	public:
 		// Value
 		using value = __type__;
@@ -70,7 +71,7 @@ namespace UltimaAPI
 			auto next_used = place + count;
 			allocator::check_allocate(next_used);
 			if (next_used > size())
-				allocator::new_size(next_used);
+				locator::new_size(next_used);
 		}
 		/// <summary>
 		///	The function checks if it is possible to insert elements without having to shift.
@@ -92,7 +93,7 @@ namespace UltimaAPI
 			}
 			new_used += count;
 			allocator::allocate_copy(allocator::index_step(new_used), place, count, correct);
-			allocator::new_size(new_used);
+			locator::new_size(new_used);
 		}
 	public:
 		/// <summary>
@@ -104,7 +105,7 @@ namespace UltimaAPI
 		{
 			if (i >= size())
 			{
-				allocator::new_size(i + 1);
+				locator::new_size(i + 1);
 				allocator::check_allocate();
 			}
 			return allocator::access_to_element(i);
@@ -434,7 +435,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() noexcept
 		{
-			return allocator::locate::size();
+			return locator::size();
 		}
 		/// <summary>
 		/// Count items entered into the data block
@@ -442,7 +443,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() const noexcept
 		{
-			return allocator::locate::size();
+			return locator::size();
 		}
 		/// <summary>
 		/// Maximum number of items that can be placed without the need to reallocate.
@@ -450,7 +451,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) capacity() noexcept
 		{
-			return allocator::locate::capacity();
+			return locator::capacity();
 		}
 		/// <summary>
 		/// Maximum number of items that can be placed without the need to reallocate.
@@ -458,7 +459,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) capacity() const noexcept
 		{
-			return allocator::locate::capacity();
+			return locator::capacity();
 		}
 		/// <summary>
 		/// Copies the contents of the data block.
@@ -490,7 +491,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) clear() noexcept
 		{
-			allocator::locate::new_size(0);
+			locator::new_size(0);
 		}
 		/// <summary>
 		/// Clears the contents of the data block without erasing previous data.
@@ -498,7 +499,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) clear() const noexcept
 		{
-			allocator::locate::new_size(0);
+			locator::new_size(0);
 		}
 		/// <summary>
 		/// Sets the standard value (zero) for the i element
@@ -518,7 +519,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) last() noexcept
 		{
-			return allocator::get_last();
+			return locator::get_last();
 		}
 		/// <summary>
 		/// Address for writing the next item.
@@ -529,7 +530,7 @@ namespace UltimaAPI
 		/// <returns>value&&</returns>
 		constexpr decltype(auto) last() const noexcept
 		{
-			return allocator::get_last();
+			return locator::get_last();
 		}
 		/// <summary>
 		///	Swaps the contents of the i and j elements
@@ -611,9 +612,9 @@ namespace UltimaAPI
 		/// <param name="sz">New data block's size</param>
 		constexpr decltype(auto) resize(size_t sz) noexcept
 		{
-			if (sz > allocator::locate::capacity())
+			if (sz > locator::capacity())
 				allocator::allocate_memory(allocator::index_step(sz));
-			allocator::new_size(sz);
+			locator::new_size(sz);
 		}
 		/// <summary>
 		///	Frees up the data block.
