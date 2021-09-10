@@ -27,7 +27,7 @@ namespace UltimaAPI
 		class __container__ = ContainerSizer<__type__>,
 		class __allocator__ = AllocatorLinear<__container__>
 	>
-	class Vector : public virtual Allocator<__container__>, public __allocator__
+	class Vector : public __allocator__
 	{
 	//	using container = __container__;
 	//	using allocator = __allocator__;
