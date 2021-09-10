@@ -60,6 +60,8 @@ namespace UltimaAPI
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		
 		static constexpr size_t npos = -1;
+
+		static_assert(std::is_base_of<allocator, __allocator__>::value);
 	private:
 		/// <summary>
 		///	TODO
