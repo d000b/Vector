@@ -24,7 +24,7 @@ namespace UltimaAPI
 {
 	template <
 		typename __type__ = int,
-		class __container__ = ContainerSizer<int>,
+		class __container__ = ContainerSizer<__type__>,
 		class __allocator__ = AllocatorLinear<__container__>
 	>
 	class Vector : public virtual Allocator<__container__>, public __allocator__
