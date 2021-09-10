@@ -23,14 +23,16 @@
 namespace UltimaAPI
 {
 	template <
-		typename __type__ = int, 
-		class __container__ = LocatorSizer<int>, 
+		typename __type__ = int,
+		class __container__ = ContainerSizer<int>,
 		class __allocator__ = AllocatorLinear<__container__>
 	>
-	class Vector : public __allocator__
+	class Vector : public virtual Allocator<__container__>, public __allocator__
 	{
-		using container = __container__;
-		using allocator = __allocator__;
+	//	using container = __container__;
+	//	using allocator = __allocator__;
+		using container = Container<__type__>;
+		using allocator = Allocator<container>;
 	public:
 		// Value
 		using value = __type__;
@@ -81,12 +83,12 @@ namespace UltimaAPI
 			/// [0; place]		(copy as in allocate memory)
 			/// [place, used]	(copy with a shift relative to the current position by count)
 			/// [place; place + count]	(Then return from the function and fill in the missing part)
-			bool correct = false;
-			size_t new_used = place;
-			if (place < used)
+			bool correct = true;
+			size_t new_used = size();
+			if (new_used < place)
 			{
-				new_used = used;
-				correct = true;
+				new_used = place;
+				correct = false;
 			}
 			new_used += count;
 			allocator::allocate_copy(allocator::index_step(new_used), place, count, correct);
@@ -105,7 +107,7 @@ namespace UltimaAPI
 				allocator::new_size(i + 1);
 				allocator::check_allocate();
 			}
-			return reference(allocator::start[i]);
+			return allocator::access_to_element(i);
 		}
 		/// <summary>
 		///	BEWARE out-from-range
@@ -115,7 +117,7 @@ namespace UltimaAPI
 		/// <param name="i">Index</param>
 		constexpr decltype(auto) at(size_t i) const
 		{
-			return const_reference(allocator::start[i]);
+			return allocator::access_to_element(i);
 		}
 		/// <summary>
 		///	Inserting an element at the end of a data block.
@@ -125,9 +127,7 @@ namespace UltimaAPI
 		/// <param name="val">element to push</param>
 		constexpr decltype(auto) push_back(rvalue val) noexcept
 		{
-			allocator::check_allocate();
-			allocator::start[used] = val;
-			++used;
+			allocator::push_back_value(val);
 		}
 		/// <summary>
 		///	Inserting an element at the end of a data block.
@@ -137,9 +137,7 @@ namespace UltimaAPI
 		/// <param name="val">element to push</param>
 		constexpr decltype(auto) push_back(const_reference val) noexcept
 		{
-			check_allocate();
-			start[used] = val;
-			++used;
+			allocator::push_back_value(val);
 		}
 		/// <summary>
 		///	Inserting an elements at the end of a data block.
@@ -150,7 +148,7 @@ namespace UltimaAPI
 		/// <param name="c">count elements</param>
 		constexpr decltype(auto) push_back(pointer val, size_t c) noexcept
 		{
-			insert(used, val, c);
+			allocator::push_back_value(val, c);
 		}
 		/// <summary>
 		///	Deletes the last element from the data block.
@@ -160,8 +158,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) pop_back() noexcept
 		{
-			if (used > 0)
-				--used;
+			allocator::pop_back();
 		}
 	#if (0)
 		/// <summary>
@@ -437,7 +434,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() noexcept
 		{
-			return allocator::size();
+			return allocator::locate::size();
 		}
 		/// <summary>
 		/// Count items entered into the data block
@@ -445,7 +442,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() const noexcept
 		{
-			return allocator::size();
+			return allocator::locate::size();
 		}
 		/// <summary>
 		/// Maximum number of items that can be placed without the need to reallocate.
@@ -453,7 +450,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) capacity() noexcept
 		{
-			return allocated;
+			return allocator::locate::capacity();
 		}
 		/// <summary>
 		/// Maximum number of items that can be placed without the need to reallocate.
@@ -461,7 +458,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) capacity() const noexcept
 		{
-			return allocated;
+			return allocator::locate::capacity();
 		}
 		/// <summary>
 		/// Copies the contents of the data block.
@@ -493,7 +490,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) clear() noexcept
 		{
-			used = 0;
+			allocator::locate::new_size(0);
 		}
 		/// <summary>
 		/// Clears the contents of the data block without erasing previous data.
@@ -501,7 +498,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) clear() const noexcept
 		{
-			used = 0;
+			allocator::locate::new_size(0);
 		}
 		/// <summary>
 		/// Sets the standard value (zero) for the i element
@@ -510,7 +507,7 @@ namespace UltimaAPI
 		/// <param name="i">Index to the element</param>
 		constexpr decltype(auto) erase(size_t i) noexcept
 		{
-			start[i] = value();
+			allocator::access_to_element(i) = value();
 		}
 		/// <summary>
 		/// Address for writing the next item.
@@ -521,7 +518,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) last() noexcept
 		{
-			return start + used;
+			return allocator::get_last();
 		}
 		/// <summary>
 		/// Address for writing the next item.
@@ -532,63 +529,7 @@ namespace UltimaAPI
 		/// <returns>value&&</returns>
 		constexpr decltype(auto) last() const noexcept
 		{
-			return start + used;
-		}
-		/// <summary>
-		/// The cell for writing the first element. 
-		///	It is necessary to check the out of range!
-		///	Does not increase the current size of the data block!
-		/// </summary>
-		/// <returns>rvalue</returns>
-		constexpr decltype(auto) front() noexcept
-		{
-			return rvalue(*start);
-		}
-		/// <summary>
-		/// The cell for writing the first element. 
-		///	It is necessary to check the out of range!
-		///	Does not increase the current size of the data block!
-		/// </summary>
-		/// <returns>rvalue</returns>
-		constexpr decltype(auto) front() const noexcept
-		{
-			return rvalue(*start);
-		}
-		/// <summary>
-		/// The cell for writing the next element. 
-		///	It is necessary to check the out of range!
-		///	Does not increase the current size of the data block!
-		/// </summary>
-		/// <returns>rvalue</returns>
-		constexpr decltype(auto) back() noexcept
-		{
-			return rvalue(*(start + used));
-		}
-		/// <summary>
-		/// The cell for writing the next element. 
-		///	It is necessary to check the out of range!
-		///	Does not increase the current size of the data block!
-		/// </summary>
-		/// <returns>rvalue</returns>
-		constexpr decltype(auto) back() const noexcept
-		{
-			return rvalue(*(start + used));
-		}
-		/// <summary>
-		///	Data block
-		/// </summary>
-		/// <returns>pointer to the data block</returns>
-		constexpr decltype(auto) data() noexcept
-		{
-			return start;
-		}
-		/// <summary>
-		///	Data block
-		/// </summary>
-		/// <returns>pointer to the data block</returns>
-		constexpr decltype(auto) data() const noexcept
-		{
-			return start;
+			return allocator::get_last();
 		}
 		/// <summary>
 		///	Swaps the contents of the i and j elements
@@ -601,7 +542,14 @@ namespace UltimaAPI
 			if (i == j)
 				return;
 			insert_correct(i > j ? i : j);
-			std::swap(start[i], start[j]);
+			std::swap(allocator::access_to_element(i), allocator::access_to_element(j));
+		}
+		constexpr decltype(auto) swap(size_t i, size_t j) const
+		{
+			if (i == j)
+				return;
+			insert_correct(i > j ? i : j);
+			std::swap(allocator::access_to_element(i), allocator::access_to_element(j));
 		}
 		/// <summary>
 		///	Swaps the contents Vectors
@@ -645,7 +593,7 @@ namespace UltimaAPI
 		/// <returns>bool</returns>
 		constexpr decltype(auto) empty() noexcept
 		{
-			return used == 0;
+			return size() == 0;
 		}
 		/// <summary>
 		///	Test to empty.
@@ -653,7 +601,7 @@ namespace UltimaAPI
 		/// <returns>bool</returns>
 		constexpr decltype(auto) empty() const noexcept
 		{
-			return used == 0;
+			return size() == 0;
 		}
 		/// <summary>
 		///	Resize data block. 
@@ -663,8 +611,9 @@ namespace UltimaAPI
 		/// <param name="sz">New data block's size</param>
 		constexpr decltype(auto) resize(size_t sz) noexcept
 		{
-			if ((used = sz) > allocated)
-				allocate(used);
+			if (sz > allocator::locate::capacity())
+				allocator::allocate_memory(allocator::index_step(sz));
+			allocator::new_size(sz);
 		}
 		/// <summary>
 		///	Frees up the data block.
@@ -673,10 +622,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) free() noexcept
 		{
-			allocated = used = 0;
-			if (start)
-				delete[] start;
-			start = nullptr;
+			allocator::deallocate_memory(0);
 		}
 		/// <summary>
 		///	Frees up the data block.
@@ -685,10 +631,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) free() const noexcept
 		{
-			allocated = used = 0;
-			if (start)
-				delete[] start;
-			start = nullptr;
+			allocator::deallocate_memory(0);
 		}
 		/// <summary>
 		/// TODO
@@ -697,7 +640,7 @@ namespace UltimaAPI
 		/// <param name="sz">New size</param>
 		constexpr decltype(auto) reserve(size_t sz) noexcept
 		{
-			allocate(sz);
+			allocator::allocate_memory(sz);
 		}
 		/// <summary>
 		///	The maximum possible number of vector elements.
@@ -714,7 +657,7 @@ namespace UltimaAPI
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size_value() noexcept
 		{
-			return sizeof(value);
+			return allocator::size_value();
 		}
 		/// <summary>
 		///	The size of vector
@@ -730,8 +673,7 @@ namespace UltimaAPI
 		/// <returns>void</returns>
 		constexpr decltype(auto) shrink_to_fit() noexcept
 		{
-			if (used < allocated)
-				allocate(used);
+			allocator::shrink_to_fit();
 		}
 		
 		constexpr decltype(auto) move(vector_rvalue v)
