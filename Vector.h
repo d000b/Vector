@@ -25,15 +25,18 @@ namespace UltimaAPI
 	template <
 		typename __type__ = int,
 		class __container__ = ContainerSizer<__type__>,
-		class __allocator__ = AllocatorLinear<__container__>
+		class __allocator__ = AllocatorLinear<__type__, __container__>
 	>
 	class Vector : public __allocator__
 	{
-	//	using container = __container__;
-	//	using allocator = __allocator__;
+	public:
+		using allocator_inherited = __allocator__;
+		using container_inherited = typename allocator_inherited::container_inherited;
+		using locate_inherited = typename container_inherited::locate_inherited;
+
 		using locator =		Locator<__type__>;
-		using container =	Container<__type__>;
-		using allocator =	Allocator<container>;
+		using container =	Container<__type__, locator>;
+		using allocator =	Allocator<__type__, container_inherited>;
 	public:
 		// Value
 		using value = __type__;
@@ -48,7 +51,7 @@ namespace UltimaAPI
 		using list_reference = list&;
 		using list_const_reference = const list_reference;
 		// Vector
-		using vector = Vector<value, container, allocator>;
+		using vector = Vector<value, container_inherited, allocator_inherited>;
 		using vector_rvalue = vector&&;
 		using vector_pointer = vector*;
 		using vector_reference = vector&;
@@ -61,7 +64,7 @@ namespace UltimaAPI
 		
 		static constexpr size_t npos = -1;
 
-		static_assert(std::is_base_of<allocator, __allocator__>::value);
+		static_assert(std::is_base_of<allocator, __allocator__>::value, "The inherited Allocator does not fit into the category");
 	private:
 		/// <summary>
 		///	TODO
@@ -78,13 +81,13 @@ namespace UltimaAPI
 		/// <summary>
 		///	The function checks if it is possible to insert elements without having to shift.
 		/// </summary>
-		/// <returns>true, if need moving data</returns>
+		/// <returns>true, if need moving allocator::data</returns>
 		/// <param name="place">place index elements</param>
 		/// <param name="count">count elements</param>
 		constexpr decltype(auto) insert_correct(size_t place, size_t count = 1)
 		{
 			/// [0; place]		(copy as in allocate memory)
-			/// [place, used]	(copy with a shift relative to the current position by count)
+			/// [place, size()]	(copy with a shift relative to the current position by count)
 			/// [place; place + count]	(Then return from the function and fill in the missing part)
 			bool correct = true;
 			size_t new_used = size();
@@ -94,7 +97,7 @@ namespace UltimaAPI
 				correct = false;
 			}
 			new_used += count;
-			allocator::allocate_copy(allocator::index_step(new_used), place, count, correct);
+			allocator::allocate_memory_copy(allocator::index_step(new_used), place, count, correct);
 			locator::new_size(new_used);
 		}
 	public:
@@ -123,8 +126,8 @@ namespace UltimaAPI
 			return allocator::access_to_element(i);
 		}
 		/// <summary>
-		///	Inserting an element at the end of a data block.
-		///	This function itself extends the data block if it is necessary.
+		///	Inserting an element at the end of a allocator::data block.
+		///	This function itself extends the allocator::data block if it is necessary.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="val">element to push</param>
@@ -133,8 +136,8 @@ namespace UltimaAPI
 			allocator::push_back_value(val);
 		}
 		/// <summary>
-		///	Inserting an element at the end of a data block.
-		///	This function itself extends the data block if it is necessary.
+		///	Inserting an element at the end of a allocator::data block.
+		///	This function itself extends the allocator::data block if it is necessary.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="val">element to push</param>
@@ -143,8 +146,8 @@ namespace UltimaAPI
 			allocator::push_back_value(val);
 		}
 		/// <summary>
-		///	Inserting an elements at the end of a data block.
-		///	This function itself extends the data block if it is necessary.
+		///	Inserting an elements at the end of a allocator::data block.
+		///	This function itself extends the allocator::data block if it is necessary.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="val">pointer elements to push</param>
@@ -154,8 +157,8 @@ namespace UltimaAPI
 			allocator::push_back_value(val, c);
 		}
 		/// <summary>
-		///	Deletes the last element from the data block.
-		///	(As long as the data is not overwritten by new data and/or the block is not moved to a new location, the deleted information will still exist.)
+		///	Deletes the last element from the allocator::data block.
+		///	(As long as the allocator::data is not overwritten by new allocator::data and/or the block is not moved to a new location, the deleted information will still exist.)
 		///	The size allocate of the block does not change.
 		/// </summary>
 		/// <returns>void</returns>
@@ -170,10 +173,10 @@ namespace UltimaAPI
 		template <class... Args>
 		constexpr decltype(auto) emplace(size_t pos, Args&&... args)
 		{
-			if (pos >= used)
+			if (pos >= size())
 			{
-				used = pos + 1;
-				if (pos >= allocated)
+				size() = pos + 1;
+				if (pos >= allocator::capacity())
 					allocate(index_step(pos));
 			}
 			reinterpret_cast<reference>(start[pos])(args);
@@ -184,12 +187,12 @@ namespace UltimaAPI
 		template <class... Args>
 		constexpr decltype(auto) emplace_back(Args&&... args)
 		{
-			emplace(used, args);
+			emplace(size(), args);
 		}
 	#endif
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an item into a data block and moving other data if a collision occurred.
+		/// Inserting an item into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -199,13 +202,13 @@ namespace UltimaAPI
 			if (insert_correct(place))
 			{
 				auto place_used = place + 1;
-				copy(start + place_used, start + place, used - place_used);
+				allocator::copy(allocator::data + place_used, allocator::data + place, size() - place_used);
 			}
-			start[place] = val;
+			allocator::access_to_element(place) = val;
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an item into a data block and moving other data if a collision occurred.
+		/// Inserting an item into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -215,13 +218,13 @@ namespace UltimaAPI
 			if (insert_correct(place))
 			{
 				auto place_used = place + 1;
-				copy(start + place_used, start + place, used - place_used);
+				copy(allocator::data + place_used, allocator::data + place, size() - place_used);
 			}
-			start[place] = val;
+			allocator::access_to_element(place) = val;
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -232,54 +235,54 @@ namespace UltimaAPI
 			if (count > 0)
 			{
 				insert_correct(place, count);
-				copy((start + place), val, count);
+				allocator::copy((allocator::data + place), val, count);
 			}
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
 		/// <param name="v"> TODO </param>
 		constexpr __inline decltype(auto) move_insert(size_t place, vector_rvalue v)
 		{
-			move_insert(place, v.data(), v.size());
+			move_insert(place, v.allocator::data(), v.size());
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="v"> TODO </param>
 		constexpr __inline decltype(auto) move_insert(vector_rvalue from)
 		{
-			move_insert(used, from);
+			move_insert(size(), from);
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
 		/// <param name="v"> TODO </param>
 		constexpr __inline decltype(auto) move_insert(size_t place, vector_reference v)
 		{
-			move_insert(place, v.data(), v.size());
+			move_insert(place, v.allocator::data(), v.size());
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="v"> TODO </param>
 		constexpr __inline decltype(auto) move_insert(vector_reference from)
 		{
-			move_insert(used, from);
+			move_insert(size(), from);
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -290,17 +293,17 @@ namespace UltimaAPI
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="l"> TODO </param>
 		constexpr __inline decltype(auto) move_insert(list_rvalue from)
 		{
-			move_insert(used, from);
+			move_insert(size(), from);
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -311,17 +314,17 @@ namespace UltimaAPI
 		}
 		/// <summary>
 		///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
-		/// Inserting an items into a data block and moving other data if a collision occurred.
+		/// Inserting an items into a allocator::data block and moving other allocator::data if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="l"> TODO </param>
 		constexpr __inline decltype(auto) move_insert(list_reference from)
 		{
-			move_insert(used, from);
+			move_insert(size(), from);
 		}
 		/// <summary>
-		/// Inserting an items into a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting an items into a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -329,11 +332,11 @@ namespace UltimaAPI
 		constexpr decltype(auto) insert(size_t place, rvalue val) noexcept
 		{
 			without_correct(place);
-			start[place] = val;
+			allocator::data[place] = val;
 		}
 		/// <summary>
-		/// Inserting an items into a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting an items into a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -344,54 +347,54 @@ namespace UltimaAPI
 			if (count > 0)
 			{
 				without_correct(place, count);
-				copy(start + place, val, count);
+				allocator::copy(allocator::data + place, val, count);
 			}
 		}
 		/// <summary>
-		/// Inserting an items into a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting an items into a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
 		/// <param name="from"> TODO </param>
 		constexpr __inline decltype(auto) insert(size_t place, vector_rvalue from) noexcept
 		{
-			insert(place, from.data(), from.size());
+			insert(place, from.allocator::data(), from.size());
 		}
 		/// <summary>
-		/// Inserting elements at the end of a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting elements at the end of a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="l"> TODO </param>
 		constexpr __inline decltype(auto) insert(vector_rvalue from) noexcept
 		{
-			insert(used, from);
+			insert(size(), from);
 		}
 		/// <summary>
-		/// Inserting an items into a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting an items into a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
 		/// <param name="from"> TODO </param>
 		constexpr __inline decltype(auto) insert(size_t place, vector_reference from) noexcept
 		{
-			insert(place, from.data(), from.size());
+			insert(place, from.allocator::data(), from.size());
 		}
 		/// <summary>
-		/// Inserting elements at the end of a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting elements at the end of a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="l"> TODO </param>
 		constexpr __inline decltype(auto) insert(vector_reference from) noexcept
 		{
-			insert(used, from);
+			insert(size(), from);
 		}
 		/// <summary>
-		/// Inserting an items into a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting an items into a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -401,18 +404,18 @@ namespace UltimaAPI
 			insert(place, from.begin(), from.size());
 		}
 		/// <summary>
-		/// Inserting elements at the end of a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting elements at the end of a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="list"> TODO </param>
 		constexpr __inline decltype(auto) insert(list_rvalue from) noexcept
 		{
-			insert(used, from);
+			insert(size(), from);
 		}
 		/// <summary>
-		/// Inserting an items into a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting an items into a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="place">place index element</param>
@@ -422,17 +425,17 @@ namespace UltimaAPI
 			insert(place, const_cast<pointer>(from.begin()), from.size());
 		}
 		/// <summary>
-		/// Inserting elements at the end of a data block.
-		///	Without moving other data(Erases data) if a collision occurred.
+		/// Inserting elements at the end of a allocator::data block.
+		///	Without moving other allocator::data(Erases allocator::data) if a collision occurred.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="list"> TODO </param>
 		constexpr __inline decltype(auto) insert(list_reference from) noexcept
 		{
-			insert(used, from);
+			insert(size(), from);
 		}
 		/// <summary>
-		/// Count items entered into the data block
+		/// Count items entered into the allocator::data block
 		/// </summary>
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() noexcept
@@ -440,7 +443,7 @@ namespace UltimaAPI
 			return locator::size();
 		}
 		/// <summary>
-		/// Count items entered into the data block
+		/// Count items entered into the allocator::data block
 		/// </summary>
 		/// <returns>size_t</returns>
 		constexpr decltype(auto) size() const noexcept
@@ -464,31 +467,31 @@ namespace UltimaAPI
 			return locator::capacity();
 		}
 		/// <summary>
-		/// Copies the contents of the data block.
+		/// Copies the contents of the allocator::data block.
 		///	Allocating memory for the contents as in the original vector.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="v">Vector<value>*</param>
 		constexpr decltype(auto) copy(vector_pointer v) noexcept
 		{
-			v->allocate(allocated);
-			if (used)
-				copy(v->start, start, v->used = used);
+			v->allocate(allocator::capacity());
+			if (size())
+				copy(v->allocator::data, allocator::data, v->size() = size());
 		}
 		/// <summary>
-		/// Copies the contents of the data block.
+		/// Copies the contents of the allocator::data block.
 		///	Allocating memory for the contents as in the original vector.
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="v">Vector<value>*</param>
 		constexpr decltype(auto) copy(vector_pointer v) const noexcept
 		{
-			v->allocate(allocated);
-			if (used)
-				copy(v->start, start, v->used = used);
+			v->allocate(allocator::capacity());
+			if (size())
+				copy(v->allocator::data, allocator::data, v->size() = size());
 		}
 		/// <summary>
-		/// Clears the contents of the data block without erasing previous data.
+		/// Clears the contents of the allocator::data block without erasing previous allocator::data.
 		/// </summary>
 		/// <returns>void</returns>
 		constexpr decltype(auto) clear() noexcept
@@ -496,7 +499,7 @@ namespace UltimaAPI
 			locator::new_size(0);
 		}
 		/// <summary>
-		/// Clears the contents of the data block without erasing previous data.
+		/// Clears the contents of the allocator::data block without erasing previous allocator::data.
 		/// </summary>
 		/// <returns>void</returns>
 		constexpr decltype(auto) clear() const noexcept
@@ -515,8 +518,8 @@ namespace UltimaAPI
 		/// <summary>
 		/// Address for writing the next item.
 		///		-(It is necessary to check the out of range!)
-		///		-(Does not increase the current size of the data block!)
-		///	Used in iterators.
+		///		-(Does not increase the current size of the allocator::data block!)
+		///	size() in iterators.
 		/// </summary>
 		/// <returns>void</returns>
 		constexpr decltype(auto) last() noexcept
@@ -526,8 +529,8 @@ namespace UltimaAPI
 		/// <summary>
 		/// Address for writing the next item.
 		///		-(It is necessary to check the out of range!)
-		///		-(Does not increase the current size of the data block!)
-		///	Used in iterators.
+		///		-(Does not increase the current size of the allocator::data block!)
+		///	size() in iterators.
 		/// </summary>
 		/// <returns>value&&</returns>
 		constexpr decltype(auto) last() const noexcept
@@ -607,11 +610,11 @@ namespace UltimaAPI
 			return size() == 0;
 		}
 		/// <summary>
-		///	Resize data block. 
-		///	It doesn't erase data when you resize, but it can happen if you reduce the size and it gets copied to a new location. 
+		///	Resize allocator::data block. 
+		///	It doesn't erase allocator::data when you resize, but it can happen if you reduce the size and it gets copied to a new location. 
 		/// </summary>
 		/// <returns>void</returns>
-		/// <param name="sz">New data block's size</param>
+		/// <param name="sz">New allocator::data block's size</param>
 		constexpr decltype(auto) resize(size_t sz) noexcept
 		{
 			if (sz > locator::capacity())
@@ -619,7 +622,7 @@ namespace UltimaAPI
 			locator::new_size(sz);
 		}
 		/// <summary>
-		///	Frees up the data block.
+		///	Frees up the allocator::data block.
 		///	Makes the vector invalid.
 		/// </summary>
 		/// <returns>void</returns>
@@ -628,7 +631,7 @@ namespace UltimaAPI
 			allocator::deallocate_memory(0);
 		}
 		/// <summary>
-		///	Frees up the data block.
+		///	Frees up the allocator::data block.
 		///	Makes the vector invalid.
 		/// </summary>
 		/// <returns>void</returns>
@@ -681,9 +684,9 @@ namespace UltimaAPI
 		
 		constexpr decltype(auto) move(vector_rvalue v)
 		{
-			used = v.used;				v.used = 0;
-			start = v.start;			v.start = nullptr;
-			allocated = v.allocated;	v.allocated = 0;
+			size() = v.size();				v.size() = 0;
+			allocator::data = v.allocator::data;			v.allocator::data = nullptr;
+			allocator::capacity() = v.allocator::capacity();	v.allocator::capacity() = 0;
 		}
 	
 		/// <summary>
@@ -692,7 +695,7 @@ namespace UltimaAPI
 	
 		constexpr decltype(auto) begin() noexcept
 		{
-			return iterator(start);
+			return iterator(allocator::data);
 		}
 		constexpr decltype(auto) end() noexcept
 		{
@@ -700,7 +703,7 @@ namespace UltimaAPI
 		}
 		constexpr decltype(auto) begin() const noexcept
 		{
-			return iterator(start);
+			return iterator(allocator::data);
 		}
 		constexpr decltype(auto) end() const noexcept
 		{
@@ -708,7 +711,7 @@ namespace UltimaAPI
 		}
 		constexpr decltype(auto) cbegin() noexcept
 		{
-			return const_iterator(start);
+			return const_iterator(allocator::data);
 		}
 		constexpr decltype(auto) cend() noexcept
 		{
@@ -716,7 +719,7 @@ namespace UltimaAPI
 		}
 		constexpr decltype(auto) cbegin() const noexcept
 		{
-			return const_iterator(start);
+			return const_iterator(allocator::data);
 		}
 		constexpr decltype(auto) cend() const noexcept
 		{
@@ -758,17 +761,17 @@ namespace UltimaAPI
 	
 		constexpr decltype(auto) strict_equal_elements(vector_const_reference other)
 		{
-			if (start == other.start)
+			if (allocator::data == other.allocator::data)
 				return true;
 			const auto tmp(*this);
-			for (size_t i = 0; i < used; i++)
+			for (size_t i = 0; i < size(); i++)
 				if (tmp[i] != other[i])
 					return false;
 			return true;
 		}
 		constexpr decltype(auto) rough_parity(vector_const_reference other)
 		{
-			return used == other.used && allocated == other.allocated;
+			return size() == other.size() && allocator::capacity() == other.allocator::capacity();
 		}
 		constexpr decltype(auto) strict_equality(vector_const_reference other)
 		{
@@ -777,7 +780,7 @@ namespace UltimaAPI
 	
 		constexpr operator bool()
 		{
-			return data() && (size() > 0);
+			return allocator::data() && (size() > 0);
 		}
 	
 		constexpr decltype(auto) operator=(vector_rvalue v)
@@ -790,7 +793,7 @@ namespace UltimaAPI
 		}
 		/// <summary>
 		/// Operator for inserting values from the initialization_list.
-		///	The old vector values in the data block will be forgotten (lost).
+		///	The old vector values in the allocator::data block will be forgotten (lost).
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="v"> TODO </param>
@@ -800,7 +803,7 @@ namespace UltimaAPI
 		}
 		/// <summary>
 		/// Operator for inserting values from the initialization_list.
-		///	The old vector values in the data block will be forgotten (lost).
+		///	The old vector values in the allocator::data block will be forgotten (lost).
 		/// </summary>
 		/// <returns>void</returns>
 		/// <param name="v"> TODO </param>
@@ -911,35 +914,35 @@ namespace UltimaAPI
 	
 		constexpr __inline decltype(auto) operator<(size_t i) noexcept
 		{
-			return used < i;
+			return size() < i;
 		}
 		constexpr __inline decltype(auto) operator>(size_t i) noexcept
 		{
-			return used > i;
+			return size() > i;
 		}
 		constexpr __inline decltype(auto) operator<=(size_t i) noexcept
 		{
-			return used <= i;
+			return size() <= i;
 		}
 		constexpr __inline decltype(auto) operator>=(size_t i) noexcept
 		{
-			return used >= i;
+			return size() >= i;
 		}
 		constexpr __inline decltype(auto) operator<(size_t i) const noexcept
 		{
-			return used < i;
+			return size() < i;
 		}
 		constexpr __inline decltype(auto) operator>(size_t i) const noexcept
 		{
-			return used > i;
+			return size() > i;
 		}
 		constexpr __inline decltype(auto) operator<=(size_t i) const noexcept
 		{
-			return used <= i;
+			return size() <= i;
 		}
 		constexpr __inline decltype(auto) operator>=(size_t i) const noexcept
 		{
-			return used >= i;
+			return size() >= i;
 		}
 		
 		/// <summary>
@@ -947,8 +950,7 @@ namespace UltimaAPI
 		/// </summary>
 		constexpr Vector() noexcept
 		{
-			start = nullptr;
-			allocated = used = 0;
+			allocator::deallocate_memory(0);
 		}
 		/// <summary>
 		///	CONSTRUCTOR initializer_list
@@ -988,7 +990,7 @@ namespace UltimaAPI
 		/// <param name="sz">Count elements to allocate</param>
 		constexpr explicit Vector(size_t sz) : Vector()
 		{
-			allocate(sz);
+			allocator::allocate_memory(sz);
 		}
 		/// <summary>
 		///	CONSTRUCTOR insert from array
