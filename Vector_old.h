@@ -3,18 +3,13 @@
 #include <memory.h>
 
 #include "../BasicIterator/BasicIterator.h"
-#include "../Memory/util.h"
 
 namespace UltimaAPI
 {
-	template <typename type>  class Vector;
+	template <typename>	class Vector;
 }
 
-#define INCLUDE_INITIALIZER_LIST 0
-
-#if defined(INCLUDE_INITIALIZER_LIST) && INCLUDE_INITIALIZER_LIST
 #include <initializer_list>
-#endif
 
 template <typename __type__ = int>
 class UltimaAPI::Vector
