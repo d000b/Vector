@@ -31,12 +31,12 @@ namespace UltimaAPI
 	{
 	public:
 		using allocator_inherited = __allocator__;
-		using container_inherited = typename allocator_inherited::container_inherited;
-		using locate_inherited = typename container_inherited::locate_inherited;
+		using container_inherited =	typename allocator_inherited::container_inherited;
+		using locate_inherited =	typename container_inherited::locate_inherited;
 
-		using locator =		Locator<__type__>;
-		using container =	Container<__type__, locator>;
-		using allocator =	Allocator<__type__, container_inherited>;
+		using allocator =	allocator_inherited;
+		using container =	container_inherited;
+		using locator =		locate_inherited;
 	public:
 		// Value
 		using value = __type__;
@@ -598,8 +598,7 @@ namespace UltimaAPI
 		/// <param name="sz">New data block's size</param>
 		constexpr decltype(auto) resize(size_t sz) noexcept
 		{
-			if (sz > locator::capacity())
-				allocator::allocate_memory(allocator::index_step(sz));
+			allocator::check_allocate(sz);
 			locator::new_size(sz);
 		}
 		/// <summary>
@@ -928,15 +927,12 @@ namespace UltimaAPI
 		/// <summary>
 		///	CONSTRUCTOR null
 		/// </summary>
-		constexpr Vector() noexcept
-		{
-			allocator::deallocate_memory(0);
-		}
+		constexpr Vector() noexcept = default;
 		/// <summary>
 		///	CONSTRUCTOR initializer_list
 		/// </summary>
 		/// <param name="v"> TODO </param>
-		constexpr Vector(list_const_reference v) : Vector()
+		constexpr Vector(list_const_reference v) noexcept : Vector()
 		{
 			insert(v);
 		}
@@ -944,7 +940,7 @@ namespace UltimaAPI
 		///	CONSTRUCTOR move
 		/// </summary>
 		/// <param name="v"> TODO </param>
-		constexpr Vector(list_rvalue v) : Vector()
+		constexpr Vector(list_rvalue v) noexcept : Vector()
 		{
 			insert(v);
 		}
@@ -952,7 +948,7 @@ namespace UltimaAPI
 		///	CONSTRUCTOR copy
 		/// </summary>
 		/// <param name="v">reference to vector</param>
-		constexpr Vector(vector_const_reference v) : Vector()
+		constexpr Vector(vector_const_reference v) noexcept : Vector()
 		{
 			v.copy(this);
 		}
@@ -968,7 +964,7 @@ namespace UltimaAPI
 		///	CONSTRUCTOR reserve
 		/// </summary>
 		/// <param name="sz">Count elements to allocate</param>
-		constexpr explicit Vector(size_t sz) : Vector()
+		constexpr explicit Vector(size_t sz) noexcept : Vector()
 		{
 			allocator::allocate_memory(sz);
 		}
@@ -977,7 +973,7 @@ namespace UltimaAPI
 		/// </summary>
 		/// <param name="sz">Count elements to allocate</param>
 		/// <param name="ray">pointer to values</param>
-		constexpr explicit Vector(size_t sz, pointer ray) : Vector()
+		constexpr explicit Vector(size_t sz, pointer ray) noexcept : Vector()
 		{
 			push_back(ray, sz);
 		}
