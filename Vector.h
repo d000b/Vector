@@ -16,11 +16,10 @@
 #include <initializer_list>
 
 #include "../BasicIterator/BasicIterator.h"
-#include "../Memory/util.h"
 
 namespace UltimaAPI
 {
-	template <typename type>  class Vector;
+	template <typename>  class Vector;
 }
 
 
