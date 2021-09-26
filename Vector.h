@@ -890,6 +890,16 @@ public:
 	{
 		return find(v) != npos;
 	}
+	/// <summary>
+	/// Add to list if no match was found
+	/// </summary>
+	/// <param name="v">value</param>
+	/// <returns>bool</returns>
+	constexpr decltype(auto) add(value v)
+	{
+		if (!found(v))
+			push_back(v);
+	}
 
 	constexpr decltype(auto) move(vector_rvalue v)
 	{
