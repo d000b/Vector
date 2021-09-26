@@ -871,7 +871,26 @@ public:
 		if (used < allocated)
 			allocate(used);
 	}
-	
+	/// <summary>
+	///  TODO
+	/// </summary>
+	/// <param name="v"></param>
+	/// <returns></returns>
+	constexpr decltype(auto) find(value v)
+	{
+		if (used > 0)
+		{
+			for (size_t i = 0; i < used; i++)
+				if (start[i] == v)
+					return i;
+		}
+		return npos;
+	}
+	constexpr decltype(auto) found(value v)
+	{
+		return find(v) != npos;
+	}
+
 	constexpr decltype(auto) move(vector_rvalue v)
 	{
 		used = v.used;				v.used = 0;
