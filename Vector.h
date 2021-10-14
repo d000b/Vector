@@ -884,7 +884,7 @@ public:
 				if (start[i] == v)
 					return i;
 		}
-		return npos;
+		return size_t(npos);
 	}
 	constexpr decltype(auto) found(value v)
 	{
