@@ -334,11 +334,7 @@ public:
 	/// <param name="val">element to push</param>
 	constexpr decltype(auto) move_insert(size_t place, rvalue val)
 	{
-		if (insert_correct(place))
-		{
-			auto place_used = place + 1;
-			copy(start + place_used, start + place, used - place_used);
-		}
+		insert_correct(place);
 		start[place] = val;
 	}
 	/// <summary>
@@ -350,11 +346,7 @@ public:
 	/// <param name="val">element to push</param>
 	constexpr decltype(auto) move_insert(size_t place, const_reference val)
 	{
-		if (insert_correct(place))
-		{
-			auto place_used = place + 1;
-			copy(start + place_used, start + place, used - place_used);
-		}
+		insert_correct(place);
 		start[place] = val;
 	}
 	/// <summary>
@@ -642,13 +634,18 @@ public:
 		used = 0;
 	}
 	/// <summary>
-	/// Sets the standard value (zero) for the i element
+	/// TODO
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="i">Index to the element</param>
 	constexpr decltype(auto) erase(size_t i) noexcept
 	{
-		start[i] = value();
+		if (i < used)
+		{
+			if (i != used - 1)
+				start[i] = start[used - 1];
+			--used;
+		}
 	}
 	/// <summary>
 	/// Address for writing the next item.
