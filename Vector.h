@@ -1199,7 +1199,7 @@ public:
 	/// <param name="v">reference to vector</param>
 	constexpr Vector(vector_rvalue v) noexcept
 	{
-		move(v);
+		move(std::move(v)); // find out the reason why, after receiving rvalue, the constructor passes it to the move function as a copy of
 	}
 	/// <summary>
 	///	CONSTRUCTOR reserve
