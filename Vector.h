@@ -1164,7 +1164,7 @@ public:
 	/// <summary>
 	///	CONSTRUCTOR null
 	/// </summary>
-	constexpr Vector() noexcept
+	constexpr	Vector() noexcept
 	{
 		start = nullptr;
 		allocated = used = 0;
@@ -1173,7 +1173,7 @@ public:
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	constexpr Vector(list_const_reference v) : Vector()
+	constexpr explicit	Vector(list_const_reference v) : Vector()
 	{
 		insert(v);
 	}
@@ -1181,7 +1181,7 @@ public:
 	///	CONSTRUCTOR move
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	constexpr Vector(list_rvalue v) : Vector()
+	constexpr explicit	Vector(list_rvalue v) : Vector()
 	{
 		insert(v);
 	}
@@ -1189,7 +1189,7 @@ public:
 	///	CONSTRUCTOR copy
 	/// </summary>
 	/// <param name="v">reference to vector</param>
-	constexpr Vector(vector_const_reference v) : Vector()
+	constexpr explicit	Vector(vector_const_reference v) : Vector()
 	{
 		v.copy(this);
 	}
@@ -1197,7 +1197,7 @@ public:
 	///	CONSTRUCTOR copy
 	/// </summary>
 	/// <param name="v">reference to vector</param>
-	constexpr Vector(vector_rvalue v) noexcept
+	constexpr explicit	Vector(vector_rvalue v) noexcept
 	{
 		move(std::move(v)); // find out the reason why, after receiving rvalue, the constructor passes it to the move function as a copy of
 	}
@@ -1205,7 +1205,7 @@ public:
 	///	CONSTRUCTOR reserve
 	/// </summary>
 	/// <param name="sz">Count elements to allocate</param>
-	constexpr explicit Vector(size_t sz) : Vector()
+	constexpr explicit	Vector(size_t sz) : Vector()
 	{
 		allocate(sz);
 	}
@@ -1214,7 +1214,7 @@ public:
 	/// </summary>
 	/// <param name="sz">Count elements to allocate</param>
 	/// <param name="ray">pointer to values</param>
-	constexpr explicit Vector(size_t sz, pointer ray) : Vector()
+	constexpr explicit	Vector(size_t sz, pointer ray) : Vector()
 	{
 		push_back(ray, sz);
 	}
