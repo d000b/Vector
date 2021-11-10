@@ -37,14 +37,14 @@ public:
 	using list = std::initializer_list<value>;
 	using list_rvalue = list&&;
 	using list_pointer = list*;
-	using list_reference = list&;
-	using list_const_reference = const list_reference;
+	using list_lvalue = list&;
+	using list_const_lvalue = const list&;
 	// Vector
 	using vector = Vector<value>;
 	using vector_rvalue = vector&&;
 	using vector_pointer = vector*;
 	using vector_reference = vector&;
-	using vector_const_reference = const vector_reference;
+	using vector_const_lvalue = const vector&;
 	// Iterator
 	using iterator = BasicIterator<value>;
 	using const_iterator = BasicIterator<const value>;
@@ -191,7 +191,11 @@ private:
 	/// <param name="dest">To copy(new block memory)</param>
 	/// <param name="src">From copy(old block memory)</param>
 	/// <param name="count">count elements to copy</param>
-	__inline constexpr decltype(auto) copy(pointer dest, const pointer src, size_t count)
+	constexpr decltype(auto) inline copy(pointer dest, const pointer src, size_t count)
+	{
+		std::copy(src, src + count, dest);
+	}
+	constexpr decltype(auto) inline copy(pointer dest, const pointer src, size_t count) const
 	{
 		std::copy(src, src + count, dest);
 	}
@@ -435,7 +439,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="l"> TODO </param>
-	constexpr __inline decltype(auto) move_insert(size_t place, list_reference l)
+	constexpr __inline decltype(auto) move_insert(size_t place, list_lvalue l)
 	{
 		move_insert(place, const_cast<pointer>(l.begin()), l.size());
 	}
@@ -445,7 +449,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="l"> TODO </param>
-	constexpr __inline decltype(auto) move_insert(list_reference from)
+	constexpr __inline decltype(auto) move_insert(list_lvalue from)
 	{
 		move_insert(used, from);
 	}
@@ -547,7 +551,7 @@ public:
 	/// <returns>void</returns>
 	/// <param name="place">place index element</param>
 	/// <param name="from"> TODO </param>
-	constexpr __inline decltype(auto) insert(size_t place, list_reference from) noexcept
+	constexpr __inline decltype(auto) insert(size_t place, list_lvalue from) noexcept
 	{
 		insert(place, const_cast<pointer>(from.begin()), from.size());
 	}
@@ -557,7 +561,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="list"> TODO </param>
-	constexpr __inline decltype(auto) insert(list_reference from) noexcept
+	constexpr __inline decltype(auto) insert(list_lvalue from) noexcept
 	{
 		insert(used, from);
 	}
@@ -602,7 +606,7 @@ public:
 	constexpr decltype(auto) copy(vector_pointer v) noexcept
 	{
 		v->allocate(allocated);
-		if (used)
+		if (used > 0)
 			copy(v->start, start, v->used = used);
 	}
 	/// <summary>
@@ -614,7 +618,7 @@ public:
 	constexpr decltype(auto) copy(vector_pointer v) const noexcept
 	{
 		v->allocate(allocated);
-		if (used)
+		if (used > 0)
 			copy(v->start, start, v->used = used);
 	}
 	/// <summary>
@@ -900,9 +904,15 @@ public:
 
 	constexpr decltype(auto) move(vector_rvalue v)
 	{
-		used = v.used;				v.used = 0;
-		start = v.start;			v.start = nullptr;
-		allocated = v.allocated;	v.allocated = 0;
+		free(); // deallock memory
+
+		used = v.used;				// copy current size
+		start = v.start;			// copy address pos
+		allocated = v.allocated;	// copy allocated size
+
+		v.used = 0;
+		v.start = nullptr;
+		v.allocated = 0;
 	}
 
 	/// <summary>
@@ -975,7 +985,7 @@ public:
 	}
 
 
-	constexpr decltype(auto) strict_equal_elements(vector_const_reference other)
+	constexpr decltype(auto) strict_equal_elements(vector_const_lvalue other)
 	{
 		if (start == other.start)
 			return true;
@@ -985,11 +995,11 @@ public:
 				return false;
 		return true;
 	}
-	constexpr decltype(auto) rough_parity(vector_const_reference other)
+	constexpr decltype(auto) rough_parity(vector_const_lvalue other)
 	{
 		return used == other.used && allocated == other.allocated;
 	}
-	constexpr decltype(auto) strict_equality(vector_const_reference other)
+	constexpr decltype(auto) strict_equality(vector_const_lvalue other)
 	{
 		return rough_parity(other) && strict_equal_elements(other);
 	}
@@ -1007,6 +1017,18 @@ public:
 	{
 		return vector(v);
 	}
+
+	constexpr decltype(auto) operator=(vector_rvalue v) const
+	{
+		move(_STD move(v));
+		return *this;
+	}
+	constexpr decltype(auto) operator=(vector_const_lvalue v)
+	{
+		v.copy(this);
+		return *this;
+	}
+
 	/// <summary>
 	/// Operator for inserting values from the initialization_list.
 	///	The old vector values in the data block will be forgotten (lost).
@@ -1023,7 +1045,7 @@ public:
 	/// </summary>
 	/// <returns>void</returns>
 	/// <param name="v"> TODO </param>
-	constexpr decltype(auto) operator()(list_reference v) noexcept
+	constexpr decltype(auto) operator()(list_lvalue v) noexcept
 	{
 		insert(v);
 	}
@@ -1119,11 +1141,11 @@ public:
 		return at(i);
 	}
 
-	constexpr __inline decltype(auto) operator!=(vector_const_reference v)
+	constexpr __inline decltype(auto) operator!=(vector_const_lvalue v)
 	{
 		return !operator==(v);
 	}
-	constexpr __inline decltype(auto) operator==(vector_const_reference v)
+	constexpr __inline decltype(auto) operator==(vector_const_lvalue v)
 	{
 		return rough_parity(v);
 	}
@@ -1173,7 +1195,7 @@ public:
 	///	CONSTRUCTOR initializer_list
 	/// </summary>
 	/// <param name="v"> TODO </param>
-	constexpr explicit	Vector(list_const_reference v) : Vector()
+	constexpr explicit	Vector(list_lvalue v) : Vector()
 	{
 		insert(v);
 	}
@@ -1189,7 +1211,7 @@ public:
 	///	CONSTRUCTOR copy
 	/// </summary>
 	/// <param name="v">reference to vector</param>
-	constexpr explicit	Vector(vector_const_reference v) : Vector()
+	constexpr explicit	Vector(vector_const_lvalue v) : Vector()
 	{
 		v.copy(this);
 	}
@@ -1199,7 +1221,7 @@ public:
 	/// <param name="v">reference to vector</param>
 	constexpr explicit	Vector(vector_rvalue v) noexcept
 	{
-		move(std::move(v)); // find out the reason why, after receiving rvalue, the constructor passes it to the move function as a copy of
+		move(v); // find out the reason why, after receiving rvalue, the constructor passes it to the move function as a copy of
 	}
 	/// <summary>
 	///	CONSTRUCTOR reserve
