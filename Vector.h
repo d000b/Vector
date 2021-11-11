@@ -311,24 +311,14 @@ public:
 	template <class... Args>
 	constexpr decltype(auto) emplace(size_t pos, Args&&... args)
 	{
-		if (pos >= used)
-		{
-			used = pos + 1;
-			if (pos >= allocated)
-				allocate(index_step(pos));
-		}
-		return static_cast<reference>(*new(last()) value( args... ));
+		check_allocate();
+		return static_cast<reference>(*new(increase_last()) value( args... ));
 	}
 	template <class... Args>
 	constexpr decltype(auto) emplace(size_t pos, const Args&... args)
 	{
-		if (pos >= used)
-		{
-			used = pos + 1;
-			if (pos >= allocated)
-				allocate(index_step(pos));
-		}
-		return static_cast<reference>(*new(last()) value(args...));
+		check_allocate();
+		return static_cast<reference>(*new(increase_last()) value(args...));
 	}
 	/// <summary>
 	/// 
@@ -676,6 +666,10 @@ public:
 	{
 		return start + used;
 	}
+	constexpr decltype(auto) increase_last() noexcept
+	{
+		return start + used++;
+	}
 	/// <summary>
 	/// Address for writing the next item.
 	///		-(It is necessary to check the out of range!)
@@ -686,6 +680,10 @@ public:
 	constexpr decltype(auto) last() const noexcept
 	{
 		return start + used;
+	}
+	constexpr decltype(auto) increase_last() const noexcept
+	{
+		return start + used++;
 	}
 	/// <summary>
 	/// The cell for writing the first element. 
