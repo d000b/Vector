@@ -1009,21 +1009,23 @@ public:
 		return data() && (size() > 0);
 	}
 
-	constexpr decltype(auto) operator=(vector_rvalue v)
-	{
-		return vector(v);
-	}
-	constexpr decltype(auto) operator=(vector_reference v)
-	{
-		return vector(v);
-	}
-
-	constexpr decltype(auto) operator=(vector_rvalue v) const
+	constexpr decltype(auto) operator=(vector_rvalue v) noexcept
 	{
 		move(_STD move(v));
 		return *this;
 	}
-	constexpr decltype(auto) operator=(vector_const_lvalue v)
+	constexpr decltype(auto) operator=(vector_reference v) noexcept
+	{
+		v.copy(this);
+		return *this;
+	}
+
+	constexpr decltype(auto) operator=(vector_rvalue v) const noexcept
+	{
+		move(_STD move(v));
+		return *this;
+	}
+	constexpr decltype(auto) operator=(vector_const_lvalue v) noexcept
 	{
 		v.copy(this);
 		return *this;
