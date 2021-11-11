@@ -32,7 +32,7 @@ public:
 	using rvalue = value&&;
 	using pointer = value*;
 	using reference = value&;
-	using const_reference = const reference;
+	using const_reference = const value&;
 	// Initializer_list
 	using list = std::initializer_list<value>;
 	using list_rvalue = list&&;
@@ -268,7 +268,7 @@ public:
 	constexpr decltype(auto) push_back(rvalue val) noexcept
 	{
 		check_allocate();
-		start[used] = val;
+		start[used] = _STD move(val);
 		++used;
 	}
 	/// <summary>
@@ -305,7 +305,6 @@ public:
 		if (used > 0)
 			--used;
 	}
-#if (0)
 	/// <summary>
 	/// 
 	/// </summary>
@@ -318,7 +317,18 @@ public:
 			if (pos >= allocated)
 				allocate(index_step(pos));
 		}
-		reinterpret_cast<reference>(start[pos])(args);
+		return static_cast<reference>(*new(last()) value( args... ));
+	}
+	template <class... Args>
+	constexpr decltype(auto) emplace(size_t pos, const Args&... args)
+	{
+		if (pos >= used)
+		{
+			used = pos + 1;
+			if (pos >= allocated)
+				allocate(index_step(pos));
+		}
+		return static_cast<reference>(*new(last()) value(args...));
 	}
 	/// <summary>
 	/// 
@@ -326,9 +336,13 @@ public:
 	template <class... Args>
 	constexpr decltype(auto) emplace_back(Args&&... args)
 	{
-		emplace(used, args);
+		return emplace(used, args...);
 	}
-#endif
+	template <class... Args>
+	constexpr decltype(auto) emplace_back(const Args&... args)
+	{
+		return emplace(used, args...);
+	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
 	/// Inserting an item into a data block and moving other data if a collision occurred.
