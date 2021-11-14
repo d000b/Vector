@@ -312,13 +312,7 @@ public:
 	constexpr decltype(auto) emplace(size_t pos, Args&&... args)
 	{
 		check_allocate();
-		return static_cast<reference>(*new(increase_last()) value( args... ));
-	}
-	template <class... Args>
-	constexpr decltype(auto) emplace(size_t pos, const Args&... args)
-	{
-		check_allocate();
-		return static_cast<reference>(*new(increase_last()) value(args...));
+		return static_cast<reference>(*new(increase_last()) value( _STD forward<Args>(args)...));
 	}
 	/// <summary>
 	/// 
@@ -326,12 +320,7 @@ public:
 	template <class... Args>
 	constexpr decltype(auto) emplace_back(Args&&... args)
 	{
-		return emplace(used, args...);
-	}
-	template <class... Args>
-	constexpr decltype(auto) emplace_back(const Args&... args)
-	{
-		return emplace(used, args...);
+		return emplace(used, _STD forward<Args>(args)...);
 	}
 	/// <summary>
 	///	HIGH TIME CONSUMPTION FUNCTION (memcpy)
