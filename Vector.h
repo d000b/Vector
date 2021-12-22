@@ -140,10 +140,10 @@ private:
 	{
 		if (al > allocated)
 		{
-			if (!start)
-				start = new value[allocated = al];
-			else if (al == allocated); // maybe adding code to do something!
-			else copy_free(new value[allocated = al], place, count, need);
+			auto new_block = new value[allocated = al];
+			if (start != nullptr)
+				copy_free(new_block, place, count, need);
+			else start = new_block;
 		}
 		else if (need)
 		{
@@ -193,11 +193,11 @@ private:
 	/// <param name="count">count elements to copy</param>
 	constexpr decltype(auto) inline copy(pointer dest, const pointer src, size_t count)
 	{
-		std::copy(src, src + count, dest);
+		_STD copy(src, src + count, dest);
 	}
 	constexpr decltype(auto) inline copy(pointer dest, const pointer src, size_t count) const
 	{
-		std::copy(src, src + count, dest);
+		_STD copy(src, src + count, dest);
 	}
 	///	Copying to a new data block. Deleting the old data block.Returns the pointer to the new data block.
 	/// </summary>
